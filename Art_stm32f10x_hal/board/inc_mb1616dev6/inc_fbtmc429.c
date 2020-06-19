@@ -157,7 +157,9 @@ void TMC429_DefaulSetting(void)
   uint8_t i;
 		
 	for(i=0; i<N_O_MOTORS; i++) 					
-	{				
+	{		
+    pinMode(OriginSensorPin[i],PIN_MODE_OUTPUT);
+		
 		motorSetting.saved=DATA_SAVED;
 		
 		motorSetting.limit_level_valid=1;
@@ -282,6 +284,8 @@ void tmc429_hw_init(void)
 		rt_kprintf("spi dev1 tmc429 [found]\n");
 	}
 	else DEG_TRACE("spi dev1 tmc429 [no found]\n");
+
+	MotorSensor_thread_init();
 }
 #endif
 
@@ -942,10 +946,26 @@ static void LimitSensorProcess(uint8_t motor_number)
 	TMC429_motor=getMotor0_2(motor_number);
 	TMC429_DEV=getTMC429_DEV(motor_number);	
 	
-	if(motorHoming.GoHome[motor_number] && Read429Short(TMC429_DEV,IDX_VACTUAL|(TMC429_motor<<5))==0	)
+//	if(motorHoming.GoHome[motor_number] && Read429Short(TMC429_DEV,IDX_VACTUAL|(TMC429_motor<<5))==0	)
+	if(motorHoming.GoHome[motor_number] )
 	{
+		
+		if((OriginSensorON[motor_number]==HIGH && pinRead(OriginSensorPin[motor_number])==HIGH )||
+			 (OriginSensorON[motor_number]==LOW && pinRead(OriginSensorPin[motor_number])==LOW	 ))
+		{
+			
+			//rt_kprintf("触发原点信号\n");
+			
+			if((motorHoming.HomeSpeed[motor_number] >0 && (Read429Short(TMC429_DEV,IDX_VACTUAL|(TMC429_motor<<5)))<0 ) || 
+				 (motorHoming.HomeSpeed[motor_number] <0 && (Read429Short(TMC429_DEV,IDX_VACTUAL|(TMC429_motor<<5)))>0 )    )
+			{	
+				//触发原点的状态满足回原方式,停止电机把当前位置寄存器写0,并关闭原点中断功能			
+				setPositionAsOrigin(motor_number);
+				//OriginSensorIRQDisable(motor_number);	
+			}
+		}
 		motorlimitedCNT[motor_number]++;
-		if(motorlimitedCNT[motor_number]>=3)
+		//if(motorlimitedCNT[motor_number]>=3)
 		{
 			//确定停止是由于限位触发的原因后，电机反转
 			u8 SwitchStatus=Read429SingleByte(TMC429_DEV,IDX_REF_SWITCHES, 3);
@@ -955,10 +975,10 @@ static void LimitSensorProcess(uint8_t motor_number)
 				//两个限位都触发，不正常
 				//Do nothing
 			}
-			else if((SwitchStatus& (0x02<<TMC429_motor*2)) ? 1:0)													//触发左限位
+			else if((SwitchStatus& (0x02<<TMC429_motor*2)) ? 1:0)																	//触发左限位
 			{		
 				//TMC429_MotorRotate(motor_number,	(abs(motorHoming.HomeSpeed[motor_number])/4));	//向右转			
-				TMC429_MotorRotate(motor_number,	(abs(motorHoming.HomeSpeed[motor_number])));	//向右转		
+				TMC429_MotorRotate(motor_number,	(abs(motorHoming.HomeSpeed[motor_number])));			//向右转		
 			}
 			else if((SwitchStatus& (0x01<<TMC429_motor*2)) ? 1:0)													//触发右限位
 			{																													 		
@@ -990,8 +1010,9 @@ static void LimitSensorProcess(uint8_t motor_number)
 		{																													
 			setPositionAsOrigin(motor_number);				
 		}
-	}
+	}	
 	//limitedCNT_NoHome[motor_number] 需要一一对应 不要错位
+#if 0
 	else if( limitedCNT_NoHome[motor_number]++>20 && motorHoming.GoHome[motor_number]==FALSE && motorHoming.GoLimit[motor_number]==FALSE )	//间隔一段时间检查是否触发限位	
 	{
 		if(Read429Short(TMC429_DEV,IDX_VACTUAL|(TMC429_motor<<5))==0	) 		//谨慎使用 电机速度为0 说明电机正常停止后者触发限位了
@@ -1005,6 +1026,7 @@ static void LimitSensorProcess(uint8_t motor_number)
 		}	
 		else limitedCNT_NoHome[motor_number]=0;		
 	}
+#endif
 //	rt_kprintf("motor_number befor=%d\n",motor_number);
 
 //	if( ( time_delay++>8) && (motorHoming.GoHome[motor_number]==FALSE) && (motorHoming.GoLimit[motor_number]==FALSE )	)//间隔一段时间检查是否触发限位	
@@ -1037,16 +1059,22 @@ static void MotorSensor_Thread_entry(void *parameter)
 	//InitOriginSensorAsEXTI();
 	while (1)
 	{  
-		rt_enter_critical();		
 		
-		for(uint8_t i=0;i<N_O_MOTORS;i++)
-		{			
-			LimitSensorProcess(i);
-		}	
-		
-		rt_exit_critical();
-		
-		rt_thread_mdelay(50);		
+		if(motorHoming.GoHome[0] || motorHoming.GoLimit[0] 	|| motorHoming.GoHome[1] || motorHoming.GoLimit[1]	||\
+			 motorHoming.GoHome[2] || motorHoming.GoLimit[2]	|| motorHoming.GoHome[3] || motorHoming.GoLimit[3]	||\
+			 motorHoming.GoHome[4] || motorHoming.GoLimit[4]	|| motorHoming.GoHome[5] || motorHoming.GoLimit[5]	)
+		{
+			for(uint8_t i=0;i<N_O_MOTORS;i++)
+			{		
+				rt_enter_critical();		
+			
+				LimitSensorProcess(i);
+			
+				rt_exit_critical();
+			}	
+			rt_hw_us_delay(10);
+		}
+		else rt_thread_mdelay(100);		
 	}		
 }
 int MotorSensor_thread_init(void)
@@ -1140,7 +1168,7 @@ static void OriginSensorIRQCall(void *args)
 /***************************************************************************/
 void motor_gohome_config(uint8_t motor_number, int home_speed)
 {
-	motorHoming.GoHome[motor_number]			=	TRUE;
+	motorHoming.GoHome[motor_number]		=	TRUE;
 	motorHoming.GoLimit[motor_number]		=	FALSE;
 	motorHoming.Homed[motor_number]			=	FALSE;
 	motorHoming.HomeSpeed[motor_number]	=	home_speed;	
@@ -1150,7 +1178,7 @@ void motor_gohome_config(uint8_t motor_number, int home_speed)
 }
 void motor_golimit_config(uint8_t motor_number, int home_speed)
 {
-	motorHoming.GoHome[motor_number]			=	FALSE;
+	motorHoming.GoHome[motor_number]		=	FALSE;
 	motorHoming.GoLimit[motor_number]		=	TRUE;
 	motorHoming.Homed[motor_number]			=	FALSE;
 	motorHoming.HomeSpeed[motor_number]=	home_speed;	
