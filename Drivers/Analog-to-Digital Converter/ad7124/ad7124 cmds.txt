@@ -1,0 +1,57 @@
+
+AD7124-4
+
+------------------------------寄存器读写------------------------------------
+1. 读取单个寄存器数据，寄存器地址从0~56
+
+ad7124  readReg  <AD7124_REG_NO>
+
+   AD7124_REG_NO:0x00~0x38 -> 0~56
+
+2. 读取所有57个寄存器数据
+
+ad7124  readRegs
+
+3. ad7124  writeReg <AD7124_REG_NO> <AD7124_REG_VAL>
+
+4. 读取ADC转换值
+
+ad7124 readData
+
+------------------------------校    准-------------------------------------
+Int_Zero_scale
+Int_Full_scale
+Sys_Zero_scale
+Sys_Full_scale
+ 	 ----------------内   部-----校    准------------------------
+内部校准需要先执行满量程校准，需要先把offset设置为默认值
+	
+内部零点校准---输入通道自动连接到0V，校准后数据保存于offset寄存器中		
+内部满量程校准---输入通道自动连接到满量程，校准后数据保存于gain寄存器中	
+
+ad7124  cal internal <channle>      ---/RDY 0->1-OK->idle
+										   ---mid|low powermode->/RDY 0->1-OK->idle   
+	 ----------------系   统-----校    准------------------------
+系统零点校准---采集外部输入零点，校准后数据保存于offset寄存器中
+系统满量程校准---采集外部满量程输入，校准后数据保存于gain寄存器中
+
+ad7124  cal offset|gain <channle>
+
+ad7124 saveCurrentReg
+------------------------------DMM  读取特定的通道电压值-------------------------------------
+
+
+配置相关寄存器参数转换为通道电压值
+
+dmm readVoltage <channel>
+
+dmm sps <19200>
+
+dmm setGain <channel> <value>
+dmm setOffset <channel> <value>
+dmm getGain <channel>
+dmm getOffset <channel>
+
+
+
+

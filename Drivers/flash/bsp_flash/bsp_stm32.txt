@@ -1,0 +1,5 @@
+与STM32F1XX_HAL区别：
+
+HSE_VALUE在stm32f1xx_hal_conf.h 内
+
+#define HAL_SPI_MODULE_ENABLED 

@@ -1,0 +1,74 @@
+isl29125_read_rgb: adjusted, unconverted readings: ( 4023 /  8856 /  4937) 
+RGB value: (   23 /    50 /    28) lux
+IRQ-Status: 1 
+RGB value: ( 14 /  32 /  18) 8 bit
+38 32 216 14 250 17
+isl29125_read_rgb: adjusted, unconverted readings: ( 3800 /  8230 /  4602) 
+RGB value: (   21 /    47 /    26) lux
+IRQ-Status: 1 
+RGB value: ( 14 /  32 /  18) 8 bit
+13 33 58 15 101 18
+isl29125_read_rgb: adjusted, unconverted readings: ( 3898 /  8461 /  4709) 
+RGB value: (   22 /    48 /    26) lux
+IRQ-Status: 1 
+RGB value: ( 15 /  34 /  19) 8 bit
+107 34 171 15 50 19
+isl29125_read_rgb: adjusted, unconverted readings: ( 4011 /  8811 /  4914) 
+RGB value: (   22 /    50 /    28) lux
+IRQ-Status: 1 
+RGB value: ( 15 /  34 /  19) 8 bit
+86 34 163 15 38 19
+isl29125_read_rgb: adjusted, unconverted readings: ( 4003 /  8790 /  4902) 
+RGB value: (   22 /    50 /    28) lux
+IRQ-Status: 1 
+IRQ-Status: 1 
+RGB value: ( 14 /  30 /  16) 8 bit
+101 28 194 12 27 16
+isl29125_read_rgb: adjusted, unconverted readings: ( 3266 /  7269 /  4123) 
+RGB value: (   18 /    41 /    23) lux
+IRQ-Status: 1 
+RGB value: ( 15 /  31 /  18) 8 bit
+10 26 153 11 41 11
+isl29125_read_rgb: adjusted, unconverted readings: ( 2969 /  6666 /  2857) 
+RGB value: (   16 /    38 /    16) lux
+IRQ-Status: 1 
+RGB value: (  8 /  16 /   9) 8 bit
+192 8 177 6 51 6
+isl29125_read_rgb: adjusted, unconverted readings: ( 1713 /  2240 /  1587) 
+RGB value: (    9 /    12 /     9) lux
+IRQ-Status: 1 
+RGB value: ( 27 /  35 /  16) 8 bit
+153 38 71 25 214 20
+isl29125_read_rgb: adjusted, unconverted readings: ( 6471 /  9881 /  5334) 
+RGB value: (   37 /    56 /    30) lux
+IRQ-Status: 1 
+RGB value: ( 13 /  32 /  22) 8 bit
+160 17 37 11 2 8
+isl29125_read_rgb: adjusted, unconverted readings: ( 2853 /  4512 /  2050) 
+RGB value: (   16 /    25 /    11) lux
+IRQ-Status: 1 
+RGB value: ( 90 / 154 /  79) 8 bit
+28 210 179 27 25 239
+isl29125_read_rgb: adjusted, unconverted readings: ( 7091 / 53788 / 61209) 
+RGB value: (   40 /   307 /   350) lux
+IRQ-Status: 1 
+RGB value: (  0 / 255 / 255) 8 bit
+251 255 0 0 252 255
+isl29125_read_rgb: adjusted, unconverted readings: (    0 / 65531 / 65532) 
+RGB value: (    0 /   374 /   374) lux
+IRQ-Status: 0 
+RGB value: (  0 / 255 / 255) 8 bit
+249 255 0 0 253 255
+isl29125_read_rgb: adjusted, unconverted readings: (    0 / 65529 / 65533) 
+RGB value: (    0 /   374 /   374) lux
+IRQ-Status: 0 
+RGB value: (  0 / 255 / 255) 8 bit
+249 255 0 0 253 255
+isl29125_read_rgb: adjusted, unconverted readings: (    0 / 65529 / 65533) 
+RGB value: (    0 /   374 /   374) lux
+IRQ-Status: 1 
+RGB value: ( 23 /  19 /  13) 8 bit
+135 17 160 7 189 9
+isl29125_read_rgb: adjusted, unconverted readings: ( 1952 /  4487 /  2493) 
+RGB value: (   11 /    25 /    14) lux
+IRQ-Status: 1 

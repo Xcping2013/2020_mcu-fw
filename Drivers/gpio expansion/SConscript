@@ -1,0 +1,27 @@
+# for module compiling
+import os
+Import('RTT_ROOT')
+Import('rtconfig')
+from building import *
+
+cwd = GetCurrentDir()
+
+CPPPATH = [cwd + '/pca95xx']
+
+src = [];
+
+if GetDepend(['IC_PCA95XX']):
+    src += Glob('pca95xx/bsp_pca9539a.c')
+
+group = DefineGroup('dirver_gpio', src, depend = [''], CPPPATH = CPPPATH)
+
+Return('group')
+
+
+
+
+
+
+
+
+

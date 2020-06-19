@@ -1,0 +1,27 @@
+# for module compiling
+import os
+Import('RTT_ROOT')
+Import('rtconfig')
+from building import *
+
+cwd = GetCurrentDir()
+
+CPPPATH = [cwd + '/mcp3421']
+
+src = [];
+
+if GetDepend(['IC_MCP3421']):
+    src += Glob('mcp3421/bsp_mcp3421.c')
+
+group = DefineGroup('dirver_adc', src, depend = [''], CPPPATH = CPPPATH)
+
+Return('group')
+
+
+
+
+
+
+
+
+
