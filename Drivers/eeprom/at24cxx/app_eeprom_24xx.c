@@ -4,9 +4,9 @@
 #if 1
 	#define DBG_ENABLE	1
 	#if 	( DBG_ENABLE )
-	#define DEG_TRACE		rt_kprintf
+	#define DBG_TRACE		rt_kprintf
 	#else
-	#define DEG_TRACE(...)		
+	#define DBG_TRACE(...)		
 #endif
 
 #endif
@@ -73,11 +73,11 @@ void at24cxx_hw_init(void)
 	
 	if (at24cxx.check(at24c256) == 0)
 	{
-		DEG_TRACE("iic device at24c256 init [error]\n");
+		DBG_TRACE("iic device at24c256 init [error]\n");
 	}
 	else 
 	{
-		DEG_TRACE("iic device at24c256 [found] addr=%d\n",at24c256.devAddress);
+		DBG_TRACE("iic device at24c256 [found] addr=%d\n",at24c256.devAddress);
 	}	
 }
 int savedata(int argc, char **argv)

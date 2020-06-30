@@ -6,9 +6,9 @@
 #if 1
 	#define DBG_ENABLE	0
 	#if 	( DBG_ENABLE )
-	#define DEG_TRACE		rt_kprintf
+	#define DBG_TRACE		rt_kprintf
 	#else
-	#define DEG_TRACE(...)		
+	#define DBG_TRACE(...)		
 #endif
 
 #endif

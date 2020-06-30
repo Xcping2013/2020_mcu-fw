@@ -23,9 +23,9 @@
 #if 1
 	#define DBG_ENABLE	0
 	#if 	( DBG_ENABLE )
-	#define DEG_TRACE		rt_kprintf
+	#define DBG_TRACE		rt_kprintf
 	#else
-	#define DEG_TRACE(...)		
+	#define DBG_TRACE(...)		
 #endif
 
 #endif
@@ -45,11 +45,10 @@ at24cxx_t at24c256=
 /****************************************MAIN---LED Blink*******************************************************/
 int main(void)
 {
-    int count = 1;
 
     rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
 		rt_pin_write(LED_PIN, PIN_HIGH);
-    while (count++)
+    while (1)
     {
         rt_pin_write(LED_PIN, PIN_HIGH);
         rt_thread_mdelay(1000);

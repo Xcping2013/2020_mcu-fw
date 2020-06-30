@@ -1,5 +1,5 @@
 
-#include "bsp_12BitADC.h"	
+#include "bsp_12BitADC_03.h"	
 #include "app_eeprom_24xx.h"
 
 #if 1
@@ -41,16 +41,28 @@ uint16_t GetADCReg_AverVal(uint8_t ch, uint8_t times);
 /*********HAL ******ADC_SAMPLETIME_71CYCLES_5 | ADC_SAMPLETIME_239CYCLES_5*********/
 #if 1
 ADC_HandleTypeDef hadc1;
-ADC_HandleTypeDef hadc2;
 
 static void MX_ADC1_Init(void);
-static void MX_ADC2_Init(void);
 
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_ADC1_Init(void)
 {
 
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
   ADC_ChannelConfTypeDef sConfig = {0};
 
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+  /** Common config 
+  */
   hadc1.Instance = ADC1;
   hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
@@ -64,64 +76,18 @@ static void MX_ADC1_Init(void)
   }
   /** Configure Regular Channel 
   */
-  sConfig.Channel = ADC_CHANNEL_8;
+  sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN ADC1_Init 2 */
-	HAL_ADCEx_Calibration_Start(&hadc1);					 //У׼ADC
+
   /* USER CODE END ADC1_Init 2 */
 
 }
-
-/**
-  * @brief ADC2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC2_Init(void)
-{
-
-  /* USER CODE BEGIN ADC2_Init 0 */
-
-  /* USER CODE END ADC2_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC2_Init 1 */
-
-  /* USER CODE END ADC2_Init 1 */
-  /** Common config 
-  */
-  hadc2.Instance = ADC2;
-  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc2.Init.ContinuousConvMode = DISABLE;
-  hadc2.Init.DiscontinuousConvMode = DISABLE;
-  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc2.Init.NbrOfConversion = 1;
-  if (HAL_ADC_Init(&hadc2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel 
-  */
-  sConfig.Channel = ADC_CHANNEL_9;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC2_Init 2 */
-	HAL_ADCEx_Calibration_Start(&hadc2);					 //У׼ADC
-  /* USER CODE END ADC2_Init 2 */
-
-}
-
 /**
 * @brief ADC MSP Initialization
 * This function configures the hardware resources used in this example
@@ -139,10 +105,24 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     /* Peripheral clock enable */
     __HAL_RCC_ADC1_CLK_ENABLE();
   
+    __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
     /**ADC1 GPIO Configuration    
+    PA0-WKUP     ------> ADC1_IN0
+    PA1     ------> ADC1_IN1
+    PA2     ------> ADC1_IN2
+    PA3     ------> ADC1_IN3
+    PA4     ------> ADC1_IN4
+    PA5     ------> ADC1_IN5
+    PA6     ------> ADC1_IN6
+    PA7     ------> ADC1_IN7
     PB0     ------> ADC1_IN8 
     */
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
+                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
     GPIO_InitStruct.Pin = GPIO_PIN_0;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -150,26 +130,6 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
   /* USER CODE BEGIN ADC1_MspInit 1 */
 
   /* USER CODE END ADC1_MspInit 1 */
-  }
-  else if(hadc->Instance==ADC2)
-  {
-  /* USER CODE BEGIN ADC2_MspInit 0 */
-
-  /* USER CODE END ADC2_MspInit 0 */
-    /* Peripheral clock enable */
-    __HAL_RCC_ADC2_CLK_ENABLE();
-  
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    /**ADC2 GPIO Configuration    
-    PB1     ------> ADC2_IN9 
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_1;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN ADC2_MspInit 1 */
-
-  /* USER CODE END ADC2_MspInit 1 */
   }
 
 }
@@ -191,34 +151,27 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     __HAL_RCC_ADC1_CLK_DISABLE();
   
     /**ADC1 GPIO Configuration    
+    PA0-WKUP     ------> ADC1_IN0
+    PA1     ------> ADC1_IN1
+    PA2     ------> ADC1_IN2
+    PA3     ------> ADC1_IN3
+    PA4     ------> ADC1_IN4
+    PA5     ------> ADC1_IN5
+    PA6     ------> ADC1_IN6
+    PA7     ------> ADC1_IN7
     PB0     ------> ADC1_IN8 
     */
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
+                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7);
+
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0);
 
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 
   /* USER CODE END ADC1_MspDeInit 1 */
   }
-  else if(hadc->Instance==ADC2)
-  {
-  /* USER CODE BEGIN ADC2_MspDeInit 0 */
-
-  /* USER CODE END ADC2_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_ADC2_CLK_DISABLE();
-  
-    /**ADC2 GPIO Configuration    
-    PB1     ------> ADC2_IN9 
-    */
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_1);
-
-  /* USER CODE BEGIN ADC2_MspDeInit 1 */
-
-  /* USER CODE END ADC2_MspDeInit 1 */
-  }
 
 }
-
 #endif
 
 /**********************USER  ADC BASIC****************************/
@@ -260,26 +213,37 @@ void LoadADC_CAL(void)
 void bsp_12BitADC_init(void)
 {
 	MX_ADC1_Init();
-	MX_ADC2_Init();
 	LoadADC_CAL();
 }
 
 
 uint16_t GetADCRegVal(uint8_t ch)
-{   
-	if(ch==1)
+{ 
+	ADC_ChannelConfTypeDef ADC1_ChanConf;   
+	switch(ch)
 	{
-		HAL_ADC_Start(&hadc1); 
-		HAL_ADC_PollForConversion(&hadc1,20);       
-		return (uint16_t)HAL_ADC_GetValue(&hadc1);	
+		case 0: ADC1_ChanConf.Channel=ADC_CHANNEL_0; break;
+		case 1: ADC1_ChanConf.Channel=ADC_CHANNEL_1; break;
+		case 2: ADC1_ChanConf.Channel=ADC_CHANNEL_2; break;
+		case 3: ADC1_ChanConf.Channel=ADC_CHANNEL_3; break;
+		case 4: ADC1_ChanConf.Channel=ADC_CHANNEL_4; break;
+		case 5: ADC1_ChanConf.Channel=ADC_CHANNEL_5; break;
+		case 6: ADC1_ChanConf.Channel=ADC_CHANNEL_6; break;
+		case 7: ADC1_ChanConf.Channel=ADC_CHANNEL_7; break;
+		case 8: ADC1_ChanConf.Channel=ADC_CHANNEL_8; break;
+		default: break;
 	}
-	else if(ch==2)
-	{
-		HAL_ADC_Start(&hadc2); 
-		HAL_ADC_PollForConversion(&hadc2,20);       
-		return (uint16_t)HAL_ADC_GetValue(&hadc2);		
-	}
-	return 0;
+                              
+	ADC1_ChanConf.Rank=1;                                       
+	ADC1_ChanConf.SamplingTime=ADC_SAMPLETIME_28CYCLES_5;                    
+	HAL_ADC_ConfigChannel(&hadc1,&ADC1_ChanConf);       
+
+	HAL_ADC_Start(&hadc1);                               
+
+	HAL_ADC_PollForConversion(&hadc1,100);                
+
+	return (u16)HAL_ADC_GetValue(&hadc1);	        	
+
 }
 uint16_t GetADCReg_AverVal(uint8_t ch, uint8_t times)
 {
@@ -329,13 +293,13 @@ float ConvertADC_to_mV(uint8_t ch, float adcVal)
 {
 	float temp, ret;
 	
-	if(ch==1 ) 	
+	if(ch==8 ) 	
 	{
 		temp= adcVal*(VREF/1000/4096)*2;		
 		ret=temp*VoltageADC1_CAL.gain[0]+VoltageADC1_CAL.offset[0];	
 		if(ret<VoltageADC1_CAL.zero) ret=0;	
 	}
-	else if(ch==2) 			 
+	else			 
 	{
 		temp= adcVal*(VREF/4096);
 		ret=temp*VoltageADC2_CAL.gain[0]+VoltageADC2_CAL.offset[0];		
@@ -470,11 +434,7 @@ uint16_t readADC(uint8_t adcNo, uint8_t times)
 {     
 	for(uint8_t i=0;i<times;i++)
 	{
-		if(adcNo==1) 			
-		rt_kprintf("adc%dREG=%d\n",adcNo,GetADCRegVal(1));
-	
-		if(adcNo==2) 			
-		rt_kprintf("adc%dREG=%d\n",adcNo,GetADCRegVal(2);
+		rt_kprintf("adc%dREG=%d\n",adcNo,GetADCRegVal(adcNo));
 	}
 }
 

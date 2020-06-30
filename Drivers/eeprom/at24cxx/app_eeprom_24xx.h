@@ -11,10 +11,14 @@
 #define EEPROM_INFO_PAGE_ADDR				( 0 )			//readdata、savedata存取空间起始地址
 #define EEPROM_INFO_PAGE_LEN				100													//readdata、savedata存取的可用页数
 
+//0~99
+
 //ROM<number><data> 进行浮点数的保存功能	
 //10页  10*64/4=160个
 #define EEPROM_ROM_PAGE_ADDR				( 100 )								
 #define EEPROM_ROM_PAGE_LEN					10
+
+//100~109
 
 //以下其他参数保存从110页开始
 /*
@@ -30,7 +34,8 @@
 
 #define EEPROM_LED_PAR_ADDR				 114 
 #define EEPROM_LED_PAR_LEN				 1		  
-		   
+	
+#define EEPROM_TEST_PAGE_ADDR			 255	
 */
 extern at24cxx_t at24c256;
 

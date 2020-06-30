@@ -1,24 +1,13 @@
 
 #include "bsp_mcu_gpio.h"
-#include "mb1616dev6_spi.h"
+#include "mbtmc429_spi.h"
 #include "tmc429.h"
 
-#define CS_PIN_TMC429 		 		 PC_4
-#define SELECT_TMC429()        GPIOC->BRR=BIT4
-#define DESELECT_TMC429()      GPIOC->BSRR=BIT4
-											
-#define POSCMP1_PIN						 PE_12
-#define	INTOUT1_PIN						 PE_13	
-
-#define	MX_SPI_Init			  MX_SPI1_Init					
-//#define	ReadWriteSPI			ReadWriteSPI1	
-
-//
 #define N_O_MOTORS 			 6                          
 #define MOTOR_NUMBER(a) (a)                                      
 
-uint8_t	SPI_DEV0_CSPin=PB_7	;		
-uint8_t	SPI_DEV1_CSPin=PB_12;
+uint8_t	SPI_DEV0_CSPin=PC_4	;		
+uint8_t	SPI_DEV1_CSPin=PC_4;
 
 SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;

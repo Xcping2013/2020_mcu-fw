@@ -1,1 +1,3 @@
-在Kconfig中设置对应具体的芯片型号
+inc_mb1616dev6_rtt_v1
+
+inc_mb1616dev6_E75

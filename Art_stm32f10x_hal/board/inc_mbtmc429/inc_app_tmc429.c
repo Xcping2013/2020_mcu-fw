@@ -29,9 +29,12 @@
 	
 */
 /**************************************************************************/
-#include "inc_mb1616dev6.h"	
-#include "inc_fbtmc429.h"	
+#include "mbtmc429_spi.h"	
+#include "mbtmc429_timer_pwm.h"
+#include "inc_app_tmc429.h"	
 #include "app_eeprom_24xx.h"
+
+
 
 #if 1   //DBG_ENABLE
 	#define DBG_ENABLE	0
@@ -45,7 +48,7 @@
 /***************************************************************************************/
 #define EEPROM_TMC429_PAR_ADDR		113 
 #define EEPROM_TMC429_PAR_LEN			2 
-#define DATA_SAVED								30
+#define DATA_SAVED								'A'
 
 #define MVP_ABS   0            
 #define MVP_REL   1  
@@ -54,10 +57,13 @@
 /**************************************Origin Sensor Config*****************************/
 /***************************************************************************************/
 #if 1
+
+//uint8_t homeSensorPin[3]={PB_9,PE_0,PE_1};//IN5-IN6-IN7
+
 uint8_t OriginSensorPin[6]=
 {	
-	DEV1PA2_PIN,	DEV1PC3_PIN,	DEV1PC2_PIN ,
-	DEV0PA2_PIN, DEV0PC3_PIN, DEV0PC2_PIN, 
+	PB_9,PE_0,PE_1,
+	PB_9,PE_0,PE_1
 };
 uint8_t OriginSensorON[6]= {	LOW,	LOW,	LOW, 	LOW,	 LOW,	 LOW};
 #endif
@@ -72,6 +78,7 @@ position_reached,
 speed_next, 				//int
 speed_actual,				//int 
 speed_max, 					//int
+	v_max,
 acc_max, 						//int
 
 rightLimit_SwS,
@@ -158,7 +165,7 @@ void TMC429_DefaulSetting(void)
 		
 	for(i=0; i<N_O_MOTORS; i++) 					
 	{		
-    pinMode(OriginSensorPin[i],PIN_MODE_OUTPUT);
+    pinMode(OriginSensorPin[i],PIN_MODE_INPUT_PULLUP);
 		
 		motorSetting.saved=DATA_SAVED;
 		
@@ -170,7 +177,7 @@ void TMC429_DefaulSetting(void)
 		motorSetting.VMax[i]=840;
 		motorSetting.AMax[i]=1000;
 		
-		motorSetting.PulseDiv[i]=8;
+		motorSetting.PulseDiv[i]=7;
 		motorSetting.RampDiv[i]=7;
 		
 		motorHoming.Homed[i]				=	FALSE;
@@ -197,9 +204,7 @@ void LoadSetting_FromEeprom(void)
 }
 
 
-
-
-
+//默认开限位,不需要限位的话 需要发送屏蔽命令
 void Init429(UCHAR Which429 )
 {
   UINT addr;
@@ -210,10 +215,10 @@ void Init429(UCHAR Which429 )
     for(addr=0; addr<=IDX_XLATCHED; addr++)
       Write429Zero(Which429, addr|(Motor<<5));
   }
+	//正常应用 默认接传感器的时候 未触发 传感器亮 低电平未限位  
 	//Write429Int(Which429, IDX_IF_CONFIG_429, IFCONF_EN_SD|IFCONF_EN_REFR|IFCONF_SDO_INT|IFCONF_INV_DIR);
 	
 	//限位不接的时候 高电平 未触发 未限位
-	//正常应用 默认接传感器的时候 未触发 传感器亮 低电平未限位  
 	Write429Int(Which429, IDX_IF_CONFIG_429, IFCONF_EN_SD|IFCONF_SDO_INT|IFCONF_INV_DIR | IFCONF_INV_REF|IFCONF_EN_REFR);
 
 	Write429Datagram(Which429, IDX_SMGP, 0x00, 0x04, 0x02);
@@ -263,11 +268,13 @@ void tmc429_hw_init(void)
 {	
 	TMC429_DefaulSetting();
 
-	pinMode(DEV0CS_PIN,PIN_MODE_OUTPUT);
-	pinSet(DEV0CS_PIN);	
-	pinMode(DEV1CS_PIN,PIN_MODE_OUTPUT);
-	pinSet(DEV1CS_PIN);	
+	pinMode(SPI_DEV0_CSPin,PIN_MODE_OUTPUT);
+	pinSet(SPI_DEV0_CSPin);	
+	pinMode(SPI_DEV1_CSPin,PIN_MODE_OUTPUT);
+	pinSet(SPI_DEV1_CSPin);	
 
+	tmc429_clk_init();
+	
 	bsp_spi_hw_init();
 
 	Init429(SPI_DEV0_TMC429);
@@ -302,11 +309,11 @@ ustep=1 200steps per turn
 */
 MaxRPM_60,	 // !<= 60/60  1R/S= 200 pulse/s
 MaxRPM_300,	 //	!<= 300/60 5R/S= 1000Pulse/S
-MaxRPM_585,	 // !<= 585/60 9.75R/S=1950PULSE/S
+MaxRPM_878,	 // !<= 585/60 9.75R/S=1950PULSE/S
 	
 };
 
-uint8_t MaxRPM_Cs=MaxRPM_585;
+uint8_t MaxRPM_Cs=MaxRPM_878;
 uint8_t MaxRPM_Changed=0;
 uint8_t AMaxLevel=255;
 void motorSetVel(uint8_t which_motor, double velocity)	//设置目标速度。 单位： pulse/ms pulse/rev
@@ -324,13 +331,12 @@ void motorSetVel(uint8_t which_motor, double velocity)	//设置目标速度。 单位： p
 
 /*TMC429_ramp_setup.xls
 
-TMC429_CLK=16MHZ |	200steps_per_turn	|	1usteps 							Vmax_factor=pulsePerSecond/VmaxREG
+TMC429_CLK=12MHZ |	200steps_per_turn	|	1usteps 							Vmax_factor=pulsePerSecond/VmaxREG
 PULS_DIV	VMAX		RPM					RPS								VMAX=1	        1PULSE					AMAX
-8					2047		585.65			585.65/60				 0.953674				1.04857*1
-9					2047		585.65/2		585.65/60/2			 0.953674/2			1.04857*2
-10=7/8		210			15.02037048									 0.953674/4			1.04857*4
-11				210			15.02037048/2								 0.953674/8			1.04857*8
-12=11/2 																			 0.953674/16		1.04857*16														 		
+7					2047		878.4			878.4/60				 	 0.429153				2.330168*1
+8					2047		878.4/2		878.4/60/2				 0.429153/2			2.330168*2
+9					210			22.530555										 0.429153/4			2.330168*4
+10				210			22.530555/2									 0.429153/8			2.330168*8
 -----------------------------------------------------------------------------
 (1ustep PULS_DIV_7) = (8ustep PULS_DIV_10) 
 Vmax_factor:	(1ustep PULS_DIV_8) = 2*(8ustep PULS_DIV_7)  
@@ -348,13 +354,13 @@ AMX		2000 1520	1120 780	500	280	 125	30
 AMax1=VMax1*VMax1*AMax0/(VMax0*VMax0)	//忘记怎么计算得到的 以前缺少注释
 -----------------------------------------------------------------------------
 */
-const float Vmax_factor = 1.04857;
+const float Vmax_factor = 1.430511;
 
 int16_t ChangeSpeedPerSecondToVMax(long pulsePerSecond)  
 {
 	int32_t VmaxREG;
 	
-	VmaxREG= 1.0*Vmax_factor * pulsePerSecond;
+	VmaxREG= 1.0*pulsePerSecond/Vmax_factor;
 
 	if(VmaxREG>2000)		VmaxREG=2000;
 	if(VmaxREG<(-2000))	VmaxREG=(-2000);
@@ -363,11 +369,12 @@ int16_t ChangeSpeedPerSecondToVMax(long pulsePerSecond)
 }
 long ChangeVMaxToSpeed_ms(uint16_t VMaxReg)  						//注意正负负号的处理
 {		
-	return	1.0*VMaxReg/Vmax_factor;
+	return	1.0*VMaxReg*Vmax_factor;
 	//(VMaxReg) *(40054/21)
 }
 //速度配置一次PULS_DIV就行，加速度配置需要根据速度进行配置适当的RAMP_DIV
-void SelectAMaxByVMax(uint8_t which_motor, uint32_t speed_Vmax)  //TMC429 16MHZ
+//放大PULS_DIV  速度越慢  但是每个寄存器数字量对应的脉冲越精确 
+void SelectAMaxByVMax(uint8_t which_motor, uint32_t speed_Vmax)  //TMC429 12MHZ
 {
 	uint32_t AMaxTemp;
 //	speed=speed*210/400000;	//命令输入的是脉冲数 不再是TMC429内部寄存器值	
@@ -379,7 +386,7 @@ void SelectAMaxByVMax(uint8_t which_motor, uint32_t speed_Vmax)  //TMC429 16MHZ
 			AMaxLevel=0;
 			TMC429_SetAxisParameter(which_motor, ramp_divisor, 12);
 		}		
-		AMaxTemp=(1.0*speed_Vmax*speed_Vmax*600)/(80*80);	
+		AMaxTemp=(1.0*speed_Vmax*speed_Vmax*800)/(80*80);	
 		if(AMaxTemp<8) AMaxTemp=8;
 	}	
 	else if(speed_Vmax<=2047)
@@ -389,7 +396,7 @@ void SelectAMaxByVMax(uint8_t which_motor, uint32_t speed_Vmax)  //TMC429 16MHZ
 			AMaxLevel=1;
 			TMC429_SetAxisParameter(which_motor, ramp_divisor, 7);
 		}	
-		AMaxTemp=(1.0*speed_Vmax*speed_Vmax*130)/(210*210);			
+		AMaxTemp=(1.0*speed_Vmax*speed_Vmax*250)/(210*210);			
 	}	
 	if(AMaxTemp>2047) AMaxTemp=2047;
 
@@ -427,9 +434,9 @@ static uint8_t getTMC429_DEV(uint8_t motor_number)
 {
 	if(motor_number<3)
 	{	
-		return SPI_DEV1_TMC429;	
+		return SPI_DEV0_TMC429;	
 	}
-	return SPI_DEV0_TMC429; 
+	return SPI_DEV1_TMC429; 
 }
 
 static void TMC429_MotorRotate(uint8_t motor_number, int32_t motor_speed)
@@ -447,7 +454,7 @@ static void TMC429_MotorRotate(uint8_t motor_number, int32_t motor_speed)
 	
 	Write429Short(TMC429_DEV,IDX_VMAX|(TMC429_motor<<5), 2047);
 	
-	Write429Short(TMC429_DEV,IDX_VTARGET|(TMC429_motor<<5), motor_speed);
+	Write429Short(TMC429_DEV,IDX_VTARGET|(TMC429_motor<<5), ChangeSpeedPerSecondToVMax(motor_speed));
 
 	//rt_kprintf("motor%d is rotate at vmax= %d\n",motor_number,motor_speed);
 }
@@ -557,6 +564,11 @@ static void TMC429_GetAxisParameter(uint8_t motor_number, uint8_t parameter_type
 			rt_kprintf("motor[%d] max positioning speed=%d\n",motor_number,ChangeVMaxToSpeed_ms(TMC429_ParameterRW.Value.Int32));
 			break;
 
+		case v_max:
+			TMC429_ParameterRW.Value.Int32=Read429Short(TMC429_DEV,IDX_VMAX|(TMC429_motor<<5));
+			rt_kprintf("motor[%d] IDX_VMAX=%d\n",motor_number,TMC429_ParameterRW.Value.Int32);
+			break;
+				
 		case acc_max:
 			TMC429_ParameterRW.Value.Int32=motorSetting.AMax[motor_number];
 			rt_kprintf("motor[%d] max acceleration=%d\n",motor_number,TMC429_ParameterRW.Value.Int32);
@@ -581,12 +593,12 @@ static void TMC429_GetAxisParameter(uint8_t motor_number, uint8_t parameter_type
 			{
 					uint8_t limit_char[12];
 					uint8_t i;
-					uint8_t limit = Read429SingleByte(SPI_DEV0_TMC429,IDX_REF_SWITCHES, 3);
+					uint8_t limit = Read429SingleByte(SPI_DEV1_TMC429,IDX_REF_SWITCHES, 3);
 					for(i=0;i<6;i++)
 					{
 						limit_char[i]=(limit&(0x20>>i)) ? '1':'0';
 					}
-					limit = Read429SingleByte(SPI_DEV1_TMC429,IDX_REF_SWITCHES, 3);
+					limit = Read429SingleByte(SPI_DEV0_TMC429,IDX_REF_SWITCHES, 3);
 					for(i=0;i<6;i++)
 					{
 						limit_char[i+6]=(limit&(0x20>>i)) ? '1':'0';
@@ -685,6 +697,15 @@ static void TMC429_SetAxisParameter(uint8_t motor_number, uint8_t parameter_type
 				rt_kprintf("set motor[%d] speed=%d ok\n",motor_number,TMC429_ParameterRW.Value.Int32);	
 			}			
 			break;
+		case v_max:
+			{			
+				motorSetting.VMax[motor_number]=CMDGetFromUart.Value.Int32;
+				Write429Short(TMC429_DEV,IDX_VMAX|(TMC429_motor<<5), motorSetting.VMax[motor_number]);
+				SetAmaxBySpeed(0,motor_number,motorSetting.VMax[motor_number]);
+				rt_kprintf("set motor[%d] IDX_VMAX=%d ok\n",motor_number,TMC429_ParameterRW.Value.Int32);	
+			}			
+			break;			
+			
 
 		case acc_max:
 			motorSetting.AMax[motor_number]=TMC429_ParameterRW.Value.Int32;
@@ -1191,7 +1212,7 @@ void motor_golimit_config(uint8_t motor_number, int home_speed)
 #endif
 
 
-/*****************************************go home | go limit*******************************************************
+/*****************************************go home | go limit*******************************************************/
 /*************************************************************************************************************/
 
 /*************************************************************************************************************/
@@ -1212,7 +1233,7 @@ int motor(int argc, char **argv)
 	if(tmc429_inited==0)
 	{
 		tmc429_inited=1;
-		tmc429_hw_init();		
+		//tmc429_hw_init();		
 	}
 	CMDGetFromUart.Type=Type_none;
 	/*
@@ -1273,7 +1294,7 @@ int motor(int argc, char **argv)
 
 			else if (!strcmp(argv[2], "next_speed")) 			CMDGetFromUart.Type=speed_next;
 			else if (!strcmp(argv[2], "next_position")) 	CMDGetFromUart.Type=position_next;		
-			else if (!strcmp(argv[2], "VMAX")) 					 	CMDGetFromUart.Type=speed_max;
+			else if (!strcmp(argv[2], "VMAX")) 					 	CMDGetFromUart.Type=v_max;
 			else if (!strcmp(argv[2], "AMAX")) 		 				CMDGetFromUart.Type=acc_max;
 			else if (!strcmp(argv[2], "position_reached"))CMDGetFromUart.Type=position_reached;		
 			
@@ -1364,7 +1385,7 @@ int motor(int argc, char **argv)
 			else if (!strcmp(argv[2], "next_position")) 	CMDGetFromUart.Type=position_next;
 			else if (!strcmp(argv[2], "actual_position")) CMDGetFromUart.Type=position_actual;
 			else if (!strcmp(argv[2], "speed_actual")) 	 	CMDGetFromUart.Type=speed_actual;
-			else if (!strcmp(argv[2], "VMAX")) 					  CMDGetFromUart.Type=speed_max;
+			else if (!strcmp(argv[2], "VMAX")) 					  CMDGetFromUart.Type=v_max;
 			else if (!strcmp(argv[2], "AMAX")) 		 				CMDGetFromUart.Type=acc_max;
 			
 			else if (!strcmp(argv[2], "rightLimit"))				CMDGetFromUart.Type=rightLimit_disable;

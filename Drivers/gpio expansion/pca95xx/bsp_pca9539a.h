@@ -37,6 +37,10 @@ four register pairs
 	5		Polarity Inversion port 1
 	6		Configuration port 0		1(default) input or 0 output
 	7		Configuration port 1
+	
+The Polarity Inversion Register (register 2) allows polarity inversion of pins defined as inputs by the Configuration
+Register. If a bit in this register is set (written with 1), the polarity of the corresponding port pin is inverted
+in this register is cleared (written with a 0), the original polarity of the corresponding port pin is retained
 */
 
 

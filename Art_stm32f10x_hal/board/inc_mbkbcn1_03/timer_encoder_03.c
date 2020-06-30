@@ -6,7 +6,7 @@ TIME1 || TIME8 可以通知接入A B相 通用定时器分别A B相接入
 读取的编码器值有累积误差，是编码器读取的问题 还是电机运行本身造成的影响？
 */
 
-#include "timer_encoder.h"
+#include "timer_encoder_03.h"
 
 #if 1
 	#define DBG_ENABLE	0
@@ -29,113 +29,133 @@ TIME1 || TIME8 可以通知接入A B相 通用定时器分别A B相接入
 int16_t OverflowCount=0;
 __IO int32_t CaptureNumber=0;       // 输入捕获数
 
-TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
 
 //Timer CubeMx Hal init		Timer2_CH1 A		Timer2_CH2 B
 #if 1								
-void MX_TIM2_Init(void)
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
 {
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
   TIM_Encoder_InitTypeDef sConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-  htim2.Instance = TIM2;
-	// 定义定时器预分频，定时器实际时钟频率为：72MHz/（ENCODER_TIMx_PRESCALER+1）
-  htim2.Init.Prescaler = 0;
-  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-	// 定义定时器周期，当定时器开始计数到ENCODER_TIMx_PERIOD值是更新定时器并生成对应事件和中断
-  htim2.Init.Period = 65535;
-	//TIM_CLOCKDIVISION_DIV1
-  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;					
-	
-  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 0;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
-  sConfig.IC1Prescaler = TIM_ICPSC_DIV1;	
-  sConfig.IC1Filter = 5;
+  sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
+  sConfig.IC1Filter = 3;
   sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC2Filter = 5;
-  if (HAL_TIM_Encoder_Init(&htim2, &sConfig) != HAL_OK)
+  sConfig.IC2Filter = 3;
+  if (HAL_TIM_Encoder_Init(&htim3, &sConfig) != HAL_OK)
   {
     Error_Handler();
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+
 }
+/**
+* @brief TIM_Encoder MSP Initialization
+* This function configures the hardware resources used in this example
+* @param htim_encoder: TIM_Encoder handle pointer
+* @retval None
+*/
 void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef* htim_encoder)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(htim_encoder->Instance==TIM2)
+  if(htim_encoder->Instance==TIM3)
   {
-  /* USER CODE BEGIN TIM2_MspInit 0 */
+  /* USER CODE BEGIN TIM3_MspInit 0 */
 
-  /* USER CODE END TIM2_MspInit 0 */
+  /* USER CODE END TIM3_MspInit 0 */
     /* Peripheral clock enable */
-    __HAL_RCC_TIM2_CLK_ENABLE();
+    __HAL_RCC_TIM3_CLK_ENABLE();
   
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**TIM2 GPIO Configuration    
-    PA0-WKUP     ------> TIM2_CH1
-    PA1     ------> TIM2_CH2 
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    /**TIM3 GPIO Configuration    
+    PB4     ------> TIM3_CH1
+    PB5     ------> TIM3_CH2 
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
+    GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    /* TIM2 interrupt Init */
-    HAL_NVIC_SetPriority(TIM2_IRQn, 3, 0);
-    HAL_NVIC_EnableIRQ(TIM2_IRQn);
-  /* USER CODE BEGIN TIM2_MspInit 1 */
+    __HAL_AFIO_REMAP_TIM3_PARTIAL();
 
-  /* USER CODE END TIM2_MspInit 1 */
+  /* USER CODE BEGIN TIM3_MspInit 1 */
+	  HAL_NVIC_SetPriority(TIM3_IRQn, 3, 0);
+    HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  /* USER CODE END TIM3_MspInit 1 */
   }
 
 }
 
+/**
+* @brief TIM_Encoder MSP De-Initialization
+* This function freeze the hardware resources used in this example
+* @param htim_encoder: TIM_Encoder handle pointer
+* @retval None
+*/
 void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* htim_encoder)
 {
-  if(htim_encoder->Instance==TIM2)
+  if(htim_encoder->Instance==TIM3)
   {
-  /* USER CODE BEGIN TIM2_MspDeInit 0 */
+  /* USER CODE BEGIN TIM3_MspDeInit 0 */
 
-  /* USER CODE END TIM2_MspDeInit 0 */
+  /* USER CODE END TIM3_MspDeInit 0 */
     /* Peripheral clock disable */
-    __HAL_RCC_TIM2_CLK_DISABLE();
+    __HAL_RCC_TIM3_CLK_DISABLE();
   
-    /**TIM2 GPIO Configuration    
-    PA0-WKUP     ------> TIM2_CH1
-    PA1     ------> TIM2_CH2 
+    /**TIM3 GPIO Configuration    
+    PB4     ------> TIM3_CH1
+    PB5     ------> TIM3_CH2 
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0|GPIO_PIN_1);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_4|GPIO_PIN_5);
 
-    /* TIM2 interrupt DeInit */
-    HAL_NVIC_DisableIRQ(TIM2_IRQn);
-  /* USER CODE BEGIN TIM2_MspDeInit 1 */
-
-  /* USER CODE END TIM2_MspDeInit 1 */
+  /* USER CODE BEGIN TIM3_MspDeInit 1 */
+		HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  /* USER CODE END TIM3_MspDeInit 1 */
   }
 
 }
-
-
-
-void TIM2_IRQHandler(void)
+void TIM3_IRQHandler(void)
 {
  	rt_interrupt_enter();
-  HAL_TIM_IRQHandler(&htim2);
+  HAL_TIM_IRQHandler(&htim3);
 	rt_interrupt_leave();
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2))
+  if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim3))
 	{
     OverflowCount--;       //向下计数溢出
 	}
@@ -149,23 +169,23 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //APP
 void Timer_EncoderInit(void)
 {
-	MX_TIM2_Init();
+	MX_TIM3_Init();
 	
-	__HAL_TIM_SET_COUNTER(&htim2,0);
-  __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_UPDATE);  				//清除更新中断标志位
-  __HAL_TIM_URS_ENABLE(&htim2);              				  //仅允许计数器溢出才产生更新中断
+	__HAL_TIM_SET_COUNTER(&htim3,0);
+  __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);  				//清除更新中断标志位
+  __HAL_TIM_URS_ENABLE(&htim3);              				  //仅允许计数器溢出才产生更新中断
 	
-//	__HAL_TIM_DISABLE_IT(&htim1,TIM_IT_TRIGGER);
-//	__HAL_TIM_DISABLE_IT(&htim1,TIM_IT_BREAK);
-//	__HAL_TIM_DISABLE_IT(&htim1,TIM_IT_COM);
-//	__HAL_TIM_DISABLE_IT(&htim1,TIM_IT_CC1);
-//	__HAL_TIM_DISABLE_IT(&htim1,TIM_IT_CC2);
-//	__HAL_TIM_DISABLE_IT(&htim1,TIM_IT_CC3);
-//	__HAL_TIM_DISABLE_IT(&htim1,TIM_IT_CC4);
+//	__HAL_TIM_DISABLE_IT(&htim3,TIM_IT_TRIGGER);
+//	__HAL_TIM_DISABLE_IT(&htim3,TIM_IT_BREAK);
+//	__HAL_TIM_DISABLE_IT(&htim3,TIM_IT_COM);
+//	__HAL_TIM_DISABLE_IT(&htim3,TIM_IT_CC1);
+//	__HAL_TIM_DISABLE_IT(&htim3,TIM_IT_CC2);
+//	__HAL_TIM_DISABLE_IT(&htim3,TIM_IT_CC3);
+//	__HAL_TIM_DISABLE_IT(&htim3,TIM_IT_CC4);
 
-  __HAL_TIM_ENABLE_IT(&htim2,TIM_IT_UPDATE); 				  //使能更新中断
+  __HAL_TIM_ENABLE_IT(&htim3,TIM_IT_UPDATE); 				  //使能更新中断
 
-	HAL_TIM_Encoder_Start_IT(&htim2, TIM_CHANNEL_ALL);
+	HAL_TIM_Encoder_Start_IT(&htim3, TIM_CHANNEL_ALL);
 }
 int encoder(int argc, char **argv)
 {
@@ -180,22 +200,22 @@ int encoder(int argc, char **argv)
     {	
 			if (!strcmp(argv[1], "clear")) 
 			{	
-				HAL_TIM_Encoder_Stop_IT(&htim2, TIM_CHANNEL_ALL);
+				HAL_TIM_Encoder_Stop_IT(&htim3, TIM_CHANNEL_ALL);
 				OverflowCount=0;
 				CaptureNumber=0;
-				__HAL_TIM_SET_COUNTER(&htim2,0);
+				__HAL_TIM_SET_COUNTER(&htim3,0);
 	
-				__HAL_TIM_CLEAR_IT(&htim2, TIM_IT_UPDATE);  				//清除更新中断标志位
-				__HAL_TIM_URS_ENABLE(&htim2);              				  //仅允许计数器溢出才产生更新中断
-				__HAL_TIM_ENABLE_IT(&htim2,TIM_IT_UPDATE); 				  //使能更新中断
+				__HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);  				//清除更新中断标志位
+				__HAL_TIM_URS_ENABLE(&htim3);              				  //仅允许计数器溢出才产生更新中断
+				__HAL_TIM_ENABLE_IT(&htim3,TIM_IT_UPDATE); 				  //使能更新中断
 
-				HAL_TIM_Encoder_Start_IT(&htim2, TIM_CHANNEL_ALL);
+				HAL_TIM_Encoder_Start_IT(&htim3, TIM_CHANNEL_ALL);
 				
         return RT_EOK;	
 			}
 			if (!strcmp(argv[1], "get")) 
 			{	
-				CaptureNumber = OverflowCount*65535 + __HAL_TIM_GET_COUNTER(&htim2);
+				CaptureNumber = OverflowCount*65535 + __HAL_TIM_GET_COUNTER(&htim3);
 				rt_kprintf("encode CaptureNumber=%ld\n",CaptureNumber);
 				
         return RT_EOK;	
