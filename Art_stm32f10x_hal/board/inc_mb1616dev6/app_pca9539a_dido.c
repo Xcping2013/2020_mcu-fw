@@ -517,8 +517,8 @@ static void writepin(uint8_t indx, uint8_t status)
 /****************************MSH_CMD_EXPORT*****************FINSH_FUNCTION_EXPORT*******************************************/
 MSH_CMD_EXPORT(readinput, read the state of the input channel);
 MSH_CMD_EXPORT(readinputs, read the state of the input channels);
-MSH_CMD_EXPORT(readoutput, read the state of the output channel);
-MSH_CMD_EXPORT(readoutputs, read the state of the output channels);
+//MSH_CMD_EXPORT(readoutput, read the state of the output channel);
+//MSH_CMD_EXPORT(readoutputs, read the state of the output channels);
 MSH_CMD_EXPORT(output, set the output channel status);
 
 FINSH_FUNCTION_EXPORT(readpin,...);
@@ -538,6 +538,9 @@ FINSH_FUNCTION_EXPORT(writepin,...);
 	}
 	FINSH_FUNCTION_EXPORT(writes,...);
 #endif
+//
+	
+	
 
 
 

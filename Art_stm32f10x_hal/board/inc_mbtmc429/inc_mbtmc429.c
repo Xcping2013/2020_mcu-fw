@@ -40,7 +40,7 @@ ver1.04---中断采集过压报警信号;立即停止电机;循环发送报警字符串
 */
 #include "bsp_mcu_delay.h"	
 #include "inc_dido.h"	
-#include "inc_app_tmc429.h"	
+#include "app_tmc429.h"	
 #include "app_eeprom_24xx.h"
 
 #if 1

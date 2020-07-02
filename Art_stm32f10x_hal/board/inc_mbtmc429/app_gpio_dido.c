@@ -159,6 +159,16 @@ int readinput(int argc, char **argv)
     }
     return 0;
 }
+int readinputs(void)
+{
+  uint16_t temp_in=0;
+	for(uint8_t i=0;i<12;i++)
+	{
+		if(inputGet(i+1)==1) bitSet(temp_in,i);		
+	}
+	rt_kprintf("+ok@input.readpin(0x%08x)\n",temp_in);
+	return RT_EOK;
+}
 int output(int argc, char **argv)
 {
 	if (argc > 2)
@@ -241,6 +251,7 @@ int rgb(int argc, char **argv)
 //
 //INIT_APP_EXPORT(dido_hw_init);
 MSH_CMD_EXPORT(readinput, readinput 1~12);
+MSH_CMD_EXPORT(readinputs, read the state of the input channels);
 MSH_CMD_EXPORT(output, output on|off 1~8);
 MSH_CMD_EXPORT(rgb, rgb <r|g|b|0>);
 

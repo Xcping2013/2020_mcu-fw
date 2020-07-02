@@ -18,6 +18,7 @@
 
 #include "app_eeprom_24xx.h"
 
+#include "app_tmc429.h"		
 //#include "inc_fbtmc429.h"	
 
 #if 1
@@ -30,7 +31,7 @@
 
 #endif
 
-//
+#define EEPROM_TEST_PAGE_ADDR			 255
 
 char version_string[]="ver3.0.0";
 
@@ -67,13 +68,13 @@ int mb1616dev6_hw_init(void)
 	
 	//cube_hal_inits();	
 	
-	delay_ms(100);
+	delay_ms(10);
 		
 	at24cxx_hw_init();
 	
 	dido_hw_init();
 		
-//	tmc429_hw_init();
+	tmc429_hw_init();
 //	projectApp_init();
 			
 	rt_kprintf("controller init......[ok]\n");
@@ -88,7 +89,7 @@ INIT_APP_EXPORT(mb1616dev6_hw_init);	//µç»úTMC429±ØÐëÔÚ´Ë½øÐÐ³õÊ¼»¯£¬²»È»°å¿¨¸´Î
 /*******************************************board debug*******************************
 																						board debug
 ********************************************board debug******************************/
-#if 	( DBG_ENABLE ) 
+#if 	( 1 ) 
 uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
 {
 	while (BufferLength--)
@@ -110,8 +111,8 @@ static void hw_eeprom_debug(void)
 	u8 len=strlen(save_info);
 					
 	rt_kprintf("eeprom test..................");
-	at24cxx.write(at24c256,(EEPROM_INFO_PAGE_ADDR+EEPROM_INFO_PAGE_LEN-1)*EEPROM_PAGE_BYTES,(u8 *)save_info,len);
-	at24cxx.read(at24c256 ,(EEPROM_INFO_PAGE_ADDR+EEPROM_INFO_PAGE_LEN-1)*EEPROM_PAGE_BYTES, read_info, len);
+	at24cxx.write(at24c256,EEPROM_TEST_PAGE_ADDR*EEPROM_PAGE_BYTES,(u8 *)save_info,len);
+	at24cxx.read(at24c256 ,EEPROM_TEST_PAGE_ADDR*EEPROM_PAGE_BYTES, read_info, len);
 	
   if(Buffercmp((uint8_t*)save_info,(uint8_t*)read_info,len))
   {

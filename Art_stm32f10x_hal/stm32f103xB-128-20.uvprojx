@@ -49,7 +49,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\build\keil\Obj_stm32f103xb\</OutputDirectory>
-          <OutputName>inc_mbtmc429</OutputName>
+          <OutputName>inc_mb1616dev6</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -1183,6 +1183,16 @@
               <FileType>1</FileType>
               <FilePath>..\Drivers\motor controller\tmc429\TMC429.c</FilePath>
             </File>
+            <File>
+              <FileName>TMCL.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\motor controller\tmc429\TMCL.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_tmc429.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\motor controller\tmc429\app_tmc429.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1390,7 +1400,7 @@
               <RVCTZI>0</RVCTZI>
               <RVCTOtherData>0</RVCTOtherData>
               <ModuleSelection>0</ModuleSelection>
-              <IncludeInBuild>0</IncludeInBuild>
+              <IncludeInBuild>1</IncludeInBuild>
               <AlwaysBuild>2</AlwaysBuild>
               <GenerateAssemblyFile>2</GenerateAssemblyFile>
               <AssembleAssemblyFile>2</AssembleAssemblyFile>
@@ -1478,14 +1488,14 @@
               <FilePath>.\board\inc_mb1616dev6\inc_fb29125.c</FilePath>
             </File>
             <File>
-              <FileName>inc_fbtmc429.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\board\inc_mb1616dev6\inc_fbtmc429.c</FilePath>
-            </File>
-            <File>
               <FileName>inc_mb1616dev6.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\board\inc_mb1616dev6\inc_mb1616dev6.c</FilePath>
+            </File>
+            <File>
+              <FileName>tmc429_config.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\board\inc_mb1616dev6\tmc429_config.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1498,7 +1508,7 @@
               <RVCTZI>0</RVCTZI>
               <RVCTOtherData>0</RVCTOtherData>
               <ModuleSelection>0</ModuleSelection>
-              <IncludeInBuild>1</IncludeInBuild>
+              <IncludeInBuild>0</IncludeInBuild>
               <AlwaysBuild>2</AlwaysBuild>
               <GenerateAssemblyFile>2</GenerateAssemblyFile>
               <AssembleAssemblyFile>2</AssembleAssemblyFile>
@@ -1576,14 +1586,14 @@
               <FilePath>.\board\inc_mbtmc429\mbtmc429_timer_pwm.c</FilePath>
             </File>
             <File>
-              <FileName>inc_app_tmc429.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\board\inc_mbtmc429\inc_app_tmc429.c</FilePath>
-            </File>
-            <File>
               <FileName>mbtmc429_rtt_timer.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\board\inc_mbtmc429\mbtmc429_rtt_timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>tmc429_config.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\board\inc_mbtmc429\tmc429_config.c</FilePath>
             </File>
             <File>
               <FileName>inc_mbtmc429.c</FileName>

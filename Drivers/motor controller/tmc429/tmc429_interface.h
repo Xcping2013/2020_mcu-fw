@@ -12,6 +12,8 @@
 #define SPI_DEV0_TMC429  0                     
 #define SPI_DEV1_TMC429  1 
  
+#define DATA_SAVED								'A'
+ 
 extern uint8_t	SPI_DEV0_CSPin;		
 extern uint8_t	SPI_DEV1_CSPin;
 
@@ -44,8 +46,18 @@ extern motorHoming_t motorHoming;
 
 extern volatile  uint8_t TMC429_Dev;
 
-extern void bsp_spi_hw_init(void);
+extern const float Vmax_factor;
+extern const float Amax_factor_slow;
+extern const float Amax_factor_fast;
+
+extern uint8_t motionLocked[N_O_MOTORS];
+extern uint8_t OriginSensorPin[N_O_MOTORS];
+extern uint8_t OriginSensorON[N_O_MOTORS];
+
 extern uint8_t ReadWriteSPI(uint8_t DeviceNumber, uint8_t Data, uint8_t LastTransfer);
+extern void TMC429_DefaulSetting(void);
+extern void tmc429_clk_init(void);
+extern void bsp_spi_hw_init(void);
 
 #endif
 

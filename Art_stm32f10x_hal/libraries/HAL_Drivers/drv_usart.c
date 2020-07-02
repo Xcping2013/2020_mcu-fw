@@ -1013,7 +1013,7 @@ int rt_hw_usart_init(void)
 //				}
 				if(uart_obj[i].config->Instance ==USART1)
 				{
-					uart_obj[i].serial.config.baud_rate=BAUD_RATE_230400;
+					uart_obj[i].serial.config.baud_rate=BAUD_RATE_115200;//BAUD_RATE_230400;
 					result = rt_hw_serial_register(&uart_obj[i].serial, uart_obj[i].config->name,
 																				 RT_DEVICE_FLAG_RDWR
 																				 | RT_DEVICE_FLAG_INT_RX

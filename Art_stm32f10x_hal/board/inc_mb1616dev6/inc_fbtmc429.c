@@ -71,7 +71,9 @@ position_reached,
 	
 speed_next, 				//int
 speed_actual,				//int 
+	speed_pulse,
 speed_max, 					//int
+		v_max,
 acc_max, 						//int
 
 rightLimit_SwS,
@@ -97,14 +99,9 @@ Type_none,
 
 };
 
-
-
-
-
-
 volatile uint8_t TMC429_DEV=SPI_DEV0_TMC429;
 uint8_t  TMC429_motor=0;
-int  motor_usteps=200*8;  
+int  motor_usteps=200*1;  
 /***************************************************************************************/
 typedef struct
 {
@@ -210,11 +207,11 @@ void Init429(UCHAR Which429 )
     for(addr=0; addr<=IDX_XLATCHED; addr++)
       Write429Zero(Which429, addr|(Motor<<5));
   }
-	//Write429Int(Which429, IDX_IF_CONFIG_429, IFCONF_EN_SD|IFCONF_EN_REFR|IFCONF_SDO_INT|IFCONF_INV_DIR);
+	Write429Int(Which429, IDX_IF_CONFIG_429, IFCONF_EN_SD|IFCONF_EN_REFR|IFCONF_SDO_INT|IFCONF_INV_DIR);
 	
 	//ÏÞÎ»²»½ÓµÄÊ±ºò ¸ßµçÆ½ Î´´¥·¢ Î´ÏÞÎ»
 	//Õý³£Ó¦ÓÃ Ä¬ÈÏ½Ó´«¸ÐÆ÷µÄÊ±ºò Î´´¥·¢ ´«¸ÐÆ÷ÁÁ µÍµçÆ½Î´ÏÞÎ»  
-	Write429Int(Which429, IDX_IF_CONFIG_429, IFCONF_EN_SD|IFCONF_SDO_INT|IFCONF_INV_DIR | IFCONF_INV_REF|IFCONF_EN_REFR);
+	//Write429Int(Which429, IDX_IF_CONFIG_429, IFCONF_EN_SD|IFCONF_SDO_INT|IFCONF_INV_DIR | IFCONF_INV_REF|IFCONF_EN_REFR);
 
 	Write429Datagram(Which429, IDX_SMGP, 0x00, 0x04, 0x02);
 
@@ -350,20 +347,20 @@ AMax1=VMax1*VMax1*AMax0/(VMax0*VMax0)	//Íü¼ÇÔõÃ´¼ÆËãµÃµ½µÄ ÒÔÇ°È±ÉÙ×¢ÊÍ
 */
 const float Vmax_factor = 1.04857;
 
-int16_t ChangeSpeedPerSecondToVMax(long pulsePerSecond)  
+int32_t ChangeSpeedPerSecondToVMax(int32_t pulsePerSecond)  
 {
-	int32_t VmaxREG;
+	float VmaxREG;
 	
-	VmaxREG= 1.0*Vmax_factor * pulsePerSecond;
+	VmaxREG= 1.0*pulsePerSecond/Vmax_factor;
 
 	if(VmaxREG>2000)		VmaxREG=2000;
 	if(VmaxREG<(-2000))	VmaxREG=(-2000);
 //	if(0<VmaxREG && VmaxREG<5)				VmaxREG=5;
-	return VmaxREG;
+	return (int32_t)VmaxREG;
 }
 long ChangeVMaxToSpeed_ms(uint16_t VMaxReg)  						//×¢ÒâÕý¸º¸ººÅµÄ´¦Àí
 {		
-	return	1.0*VMaxReg/Vmax_factor;
+	return	1.0*VMaxReg*Vmax_factor;
 	//(VMaxReg) *(40054/21)
 }
 //ËÙ¶ÈÅäÖÃÒ»´ÎPULS_DIV¾ÍÐÐ£¬¼ÓËÙ¶ÈÅäÖÃÐèÒª¸ù¾ÝËÙ¶È½øÐÐÅäÖÃÊÊµ±µÄRAMP_DIV
@@ -414,6 +411,8 @@ static void SetAmaxBySpeed(u8 mode, u8 motor_number , int32_t speed)	//ÃüÁîÊäÈëµ
 Rotate |	MoveToPosition	|	StopMotor	|	SetAmaxBySpeed	| 	GetAxisParameter	SetAxisParameter
 ********************************************TMC429 motion*****************************/
 #if 1
+uint8_t motionLocked[N_O_MOTORS]={0,0,0,0,0,0};
+
 static void TMC429_MotorRotate(uint8_t motor_number, int32_t motor_speed);
 static void TMC429_MoveToPosition(uint8_t motor_number, uint8_t motion_mode, int32_t position);
 static void StopMotorByHW(uint8_t motor_number);
@@ -443,11 +442,11 @@ static void TMC429_MotorRotate(uint8_t motor_number, int32_t motor_speed)
 	Set429RampMode(TMC429_DEV,	TMC429_motor, RM_VELOCITY);
 
 	//ÐèÒªÖØÐÂÅä¼ÓËÙ¶È
-	SetAmaxBySpeed(1,motor_number,motor_speed);	
+	SetAmaxBySpeed(1,motor_number,abs(motor_speed));	
 	
 	Write429Short(TMC429_DEV,IDX_VMAX|(TMC429_motor<<5), 2047);
 	
-	Write429Short(TMC429_DEV,IDX_VTARGET|(TMC429_motor<<5), motor_speed);
+	Write429Short(TMC429_DEV,IDX_VTARGET|(TMC429_motor<<5), ChangeSpeedPerSecondToVMax(motor_speed));
 
 	//rt_kprintf("motor%d is rotate at vmax= %d\n",motor_number,motor_speed);
 }

@@ -2,7 +2,7 @@
 #include "app_eeprom_24xx.h"
 
 #if 1
-	#define DBG_ENABLE	1
+	#define DBG_ENABLE	0
 	#if 	( DBG_ENABLE )
 	#define DBG_TRACE		rt_kprintf
 	#else
@@ -77,6 +77,7 @@ void at24cxx_hw_init(void)
 	}
 	else 
 	{
+		rt_kprintf("iic device at24c256 [found]\n");
 		DBG_TRACE("iic device at24c256 [found] addr=%d\n",at24c256.devAddress);
 	}	
 }
