@@ -16,8 +16,9 @@
 #define EEPROM_ADC_CAL_PAGE_ADDR	( 110 )			
 #define EEPROM_ADC_CAL_PAGE_LEN	  ( 1+1 )										
 		
-#define VREF	3291.0		
+//#define VREF	3291.0		
 
+#define VREF	3000.0	
 #define CAL_DATA_SAVED	30
 
 /*************************************************************************************/
@@ -111,7 +112,7 @@ static void MX_ADC2_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_9;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
   {
     Error_Handler();

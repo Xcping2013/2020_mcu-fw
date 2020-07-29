@@ -40,16 +40,16 @@
 #ifndef PLATFORM_DRIVERS_H_
 #define PLATFORM_DRIVERS_H_
 
-#include "inc_mbkbcn1.h"
+#include "bsp_defines.h"
+#include "bsp_mcu_delay.h"	
+#include "bsp_mcu_gpio.h"
+#include "bsp_mcu_softi2c.h"
+#include "bsp_eeprom_24xx.h"
+#include "app_eeprom_24xx.h"
 
-//#include "bsp_include.h"	
-//#include "app_include.h"
 /******************************************************************************/
 /********************** Macros and Constants Definitions **********************/
 /*******AD芯片只要配置IIC或者SPI相关，再读取数据 （有些需进行相关用户配置）****/
-#define ad7124_cs_pin		PA_4
-#define ad7124_sync_pin	PB_10
-#define ad7124_psw_pin	PB_11
 
 #define	AD7124_TRACE_EN	1
 #ifdef	AD7124_TRACE_EN
@@ -191,5 +191,10 @@ int32_t gpio_get_value(struct gpio_desc *desc,
 
 /* Generate miliseconds delay. */
 void mdelay(uint32_t msecs);
+
+
+extern void ad7124_spi_gpio_init(void);
+extern void ad7124_spi_readwrite(uint8_t *pTxData, uint8_t *pRxData, uint16_t Size,uint32_t Timeout);
+
 
 #endif // PLATFORM_DRIVERS_H_

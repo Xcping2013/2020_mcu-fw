@@ -56,24 +56,87 @@ uint8_t pca9539a_devAddR[4]={0x48,0xE8,0x4C,0xEC};
 uint8_t data_invert_order(uint8_t data); 
 uint8_t pca9539a_is_inited=0;
 /****************************************************************************************/
-static void dido_pca9539a_init(pca9539a_t pca9539a_n);
+void dido_pca9539a_init(void);
+//void dido_pca9539a_init(pca9539a_t pca9539a_n);
 /****************************************************************************************/
 void dido_hw_init(void)
 {
-	if(pca9539a_is_inited==0)
-	{
-		dido_pca9539a_init(pca9539a_1);	//由于IIC引脚一样，时有同样的地址会造成重复初始化或者未初始化现象
-		dido_pca9539a_init(pca9539a_2);
-		dido_pca9539a_init(pca9539a_3);
-		dido_pca9539a_init(pca9539a_4);
-		
-		if(pca9539a_is_inited!=0)
-		{
-			rt_kprintf("iic device pca95xx [found]\n");
-		}
-	}	
+	dido_pca9539a_init();
+//	if(pca9539a_is_inited==0)
+//	{
+//		dido_pca9539a_init(pca9539a_1);	//由于IIC引脚一样，时有同样的地址会造成重复初始化或者未初始化现象
+//		dido_pca9539a_init(pca9539a_2);
+//		dido_pca9539a_init(pca9539a_3);
+//		dido_pca9539a_init(pca9539a_4);
+//		
+//		if(pca9539a_is_inited!=0)
+//		{
+//			rt_kprintf("iic device pca95xx [found]\n");
+//		}
+//	}	
 }
-static void dido_pca9539a_init(pca9539a_t pca9539a_n)
+void dido_pca9539a_init(void)
+{ 
+	if(	pca9539a_init(pca9539a_1)!=REPLY_OK)
+	{
+		pca9539a_1.devAddress=0xE8;
+		if(	pca9539a_init(pca9539a_1)==REPLY_OK)
+		{
+			rt_kprintf("iic device pca95xx [found] addr1=%d\n",pca9539a_1.devAddress);
+		}	
+		
+	}
+	else 
+	{
+		rt_kprintf("iic device pca95xx [found] addr1=%d\n",pca9539a_1.devAddress);
+	}
+	
+	if(	pca9539a_init(pca9539a_2)!=REPLY_OK)
+	{
+		pca9539a_2.devAddress=0xEC;		
+		if(	pca9539a_init(pca9539a_2)==REPLY_OK)
+		{
+			rt_kprintf("iic device pca95xx [found] addr2=%d\n",pca9539a_2.devAddress);
+		}	
+		
+	}
+	else 
+	{
+		rt_kprintf("iic device pca95xx [found] addr2=%d\n",pca9539a_2.devAddress);
+	}
+	//if(g_tParam.Project_ID==Atlas_QT1)	//IIC 引脚需上拉
+	{
+		if(	pca9539a_init(pca9539a_3)!=REPLY_OK)
+		{
+			pca9539a_3.devAddress=0xEC;
+			if(	pca9539a_init(pca9539a_3)==REPLY_OK)
+			{
+				rt_kprintf("iic device pca95xx [found] addr3=%d\n",pca9539a_3.devAddress);
+			}	
+			
+		}
+		else 
+		{
+			rt_kprintf("iic device pca95xx [found] addr3=%d\n",pca9539a_3.devAddress);
+		}
+		
+		if(	pca9539a_init(pca9539a_4)!=REPLY_OK)
+		{
+			pca9539a_4.devAddress=0xEC;		
+			if(	pca9539a_init(pca9539a_4)==REPLY_OK)
+			{
+				rt_kprintf("iic device pca95xx [found] addr4=%d\n",pca9539a_4.devAddress);
+			}	
+			
+		}
+		else 
+		{
+			rt_kprintf("iic device pca95xx [found] addr4=%d\n",pca9539a_4.devAddress);
+		}	
+	}
+}
+
+void dido_pca9539a_init0(pca9539a_t pca9539a_n)
 {
 	uint8_t i;
 	

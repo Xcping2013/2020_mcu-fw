@@ -57,7 +57,7 @@ c. 选择寄存器树中的Oset0寄存器，检查校准是否已执行，并且系数是否改变
 struct ad7124_dev my_ad7124;                       /* A new driver instance */
 struct ad7124_dev *ad7124_handler = &my_ad7124; 	 /* A driver handle to pass around */
 enum ad7124_registers regNr;                       /* Variable to iterate through registers */
-long ADCtimeout = 1000;                               /* Number of tries before a function times out */
+long ADCtimeout = 1000;                            /* Number of tries before a function times out */
 long ret = 0;                                      /* Return value */
 long sample;                                       /* Stores raw value read from the ADC */
 

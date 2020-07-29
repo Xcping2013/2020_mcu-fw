@@ -87,11 +87,11 @@ static void MX_GPIO_Init(void)
 /****************************************MAIN---LED Blink*******************************************************/
 int main(void)
 {
-    int count = 1;
+//    int count = 1;
 
     rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
 		rt_pin_write(LED_PIN, PIN_HIGH);
-    while (count++)
+    while (1)
     {
         rt_pin_write(LED_PIN, PIN_HIGH);
         rt_thread_mdelay(1000);
@@ -171,15 +171,16 @@ void SetKeyChannel(uint8_t ch)
 }
 
 static uint8_t 	KeyChannel;
-static uint8_t 	KeyMux;
+uint8_t 	KeyA0_7=0;
 int getKeyData(int argc, char **argv)
 {
 	uint8_t result = REPLY_OK;
 	
+	bsp_12BitADC_init();
 	if (argc ==4)
 	{
 		KeyChannel=atoi(argv[1]);
-		KeyMux=atoi(argv[2]);
+		KeyA0_7=atoi(argv[2]);
 		
 		StreamDataCNT=atoi(argv[3]);
 				
@@ -211,20 +212,20 @@ static void StreamData_Thread_entry(void *parameter)
 					//!> 按键切换到位后，等待电压稳定
 					delay_us(100);
 					//!> channel and mux is selected ADC数据是正确的固定通道 
-					KeyVolt_AdcVal=GetADCReg_FilterVal(KeyMux,1);
+					KeyVolt_AdcVal=GetADCReg_FilterVal(KeyA0_7,1);
 					//预采数据 1ms
 					for(uint8_t i=0;i<100;i++)
 					{
-						KeyVolt_AdcVal=KeyVolt_AdcVal * avg_factor + (1-avg_factor) * GetADCReg_FilterVal(KeyMux,1);
+						KeyVolt_AdcVal=KeyVolt_AdcVal * avg_factor + (1-avg_factor) * GetADCReg_FilterVal(KeyA0_7,1);
 					}				
 					time_once=1;time_start=HAL_GetTick();
 					rt_kprintf("start time:%dms\n",HAL_GetTick());
 				}				
-				KeyVolt_AdcVal=KeyVolt_AdcVal * avg_factor + (1-avg_factor) * GetADCReg_FilterVal(KeyMux,1);
+				KeyVolt_AdcVal=KeyVolt_AdcVal * avg_factor + (1-avg_factor) * GetADCReg_FilterVal(KeyA0_7,1);
 
-				sprintf(strKeyPress,"%.3f",ConvertADC_to_mV(1,GetADCReg_FilterVal(8,1)));	
+				sprintf(strKeyPress,"%.3f",ConvertADC_to_mV(8,GetADCReg_FilterVal(8,1)));	
 				
-				sprintf(strKeyVoltage,"%.1f", ConvertADC_to_mV(KeyMux,KeyVolt_AdcVal));	
+				sprintf(strKeyVoltage,"%.1f", ConvertADC_to_mV(KeyA0_7,KeyVolt_AdcVal));	
 				
 				CaptureNumber = OverflowCount*65535 + __HAL_TIM_GET_COUNTER(&htim3);						
 

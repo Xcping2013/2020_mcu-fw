@@ -22,19 +22,22 @@
 
 //以下其他参数保存从110页开始
 /*
-#define EEPROM_ADC_CAL_PAGE_ADDR		110~111 
+#define EEPROM_ADC_CAL_PAGE_ADDR				110~111 
 
 #define EEPROM_MCP3421_CAL_PAGE_ADDR		112 
 
-#define EEPROM_TMC429_PAR_ADDR		 113 
-#define EEPROM_TMC429_PAR_LEN		   2   
+#define EEPROM_TMC429_PAR_ADDR		 			113 
+#define EEPROM_TMC429_PAR_LEN		   			2   
 
-#define EEPROM_TMC429_PAR_ADDR		 113 
+#define EEPROM_TMC429_PAR_ADDR		 			113 
 #define EEPROM_TMC429_PAR_LEN		  
 
-#define EEPROM_LED_PAR_ADDR				 114 
-#define EEPROM_LED_PAR_LEN				 1		  
+#define EEPROM_LED_PAR_ADDR				 			114 
+#define EEPROM_LED_PAR_LEN				 			1		  
 	
+#define EEPROM_DMM_CAL_PAGE_ADDR		115-116
+#define EEPROM_DMM_CAL_PAGE_LEN	 	  2	
+
 #define EEPROM_TEST_PAGE_ADDR			 255	
 */
 extern at24cxx_t at24c256;

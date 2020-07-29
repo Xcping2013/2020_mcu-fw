@@ -48,7 +48,11 @@
 /******************************************************************************/
 //spi_init			spi_write_and_read
 //HAL
-#if 1
+__weak void ad7124_spi_gpio_init(void)
+{
+	
+}
+#if 0
 SPI_HandleTypeDef hspi1;
 static void MX_SPI1_Init(void);
 /**
@@ -211,12 +215,7 @@ int32_t spi_init(struct spi_desc **desc,
 	if (param->type) {
 		// Unused variable - fix compiler warning
 	}
-	pinMode(ad7124_cs_pin,PIN_MODE_OUTPUT);	
-	pinMode(ad7124_sync_pin,PIN_MODE_OUTPUT);
-	//pinMode(ad7124_psw_pin,PIN_MODE_OUTPUT);
-	pinSet(ad7124_sync_pin);
-	pinSet(ad7124_cs_pin);
-	MX_SPI1_Init();
+	ad7124_spi_gpio_init();
 
 	return SUCCESS;
 }
@@ -257,12 +256,8 @@ int32_t spi_write_and_read(struct spi_desc *desc,
 
 	if (bytes_number) {
 		// Unused variable - fix compiler warning
-		rt_pin_write(ad7124_cs_pin,0);
 		
-		HAL_SPI_TransmitReceive(&hspi1, data, data, bytes_number,5000);
-		
-		rt_pin_write(ad7124_cs_pin,1);
-		
+		ad7124_spi_readwrite(data,data,bytes_number,5000);
 	}
 
 	return 0;

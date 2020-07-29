@@ -1,7 +1,6 @@
 /******************************************************************************/
 /*		 配置
-ready = (regs[AD7124_Status].value &
-AD7124_STATUS_REG_RDY) != 0;			BUG1	
+ready = (regs[AD7124_Status].value & AD7124_STATUS_REG_RDY) != 0;			BUG1	
 
 1.Channel_n:	
 	AINP
@@ -47,7 +46,7 @@ c. 选择寄存器树中的Oset0寄存器，检查校准是否已执行，并且系数是否改变
 #include "ad7124_regs.h"
 
 #include "dmm.h"
-#include "cal.h"
+
 /* Error codes */
 /* Error codes */
 #define INVALID_VAL -1 /* Invalid argument */
@@ -56,6 +55,7 @@ c. 选择寄存器树中的Oset0寄存器，检查校准是否已执行，并且系数是否改变
 
 #define EEPROM_AD7124_ADDR ((EEPROM_VAR_PAGE_ADDR+1)*64)
 #define ADC7124_VER	'1'
+
 typedef struct	
 {
 	uint8_t adcVer;					//1		
@@ -75,10 +75,6 @@ typedef struct
 	int32_t Gain0;
 	int32_t Gain1;
 	
-	float K[2];
-
-	float B[2];
-
 }	
 AD7124_REG_KEY_T;
 

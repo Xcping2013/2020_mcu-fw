@@ -58,7 +58,7 @@ at24cxx_t at24c256=
 
 uint8_t LED_PIN=PA_8;
 uint8_t KeyChPinIN[4]={PB_5,PB_4,PB_3,PA_15};						//S4-S6
-uint8_t KeyMuxCSpin[4]={PB_9,PB_7,PB_6,PB_6};						//CS_A-CS_C
+uint8_t KeyA0_7CSpin[4]={PB_9,PB_7,PB_6,PB_6};						//CS_A-CS_C
 //
 const float avg_factor = 0.8;
 char strKeyVoltage[15]="";
@@ -213,25 +213,25 @@ void SetKeyChannel(uint8_t ch)
 			break;
 	}
 }
-void SetKeyMux(uint8_t ch)
+void SetKeyA0_7(uint8_t ch)
 {
 	switch(ch)
 	{
-		case 0: 		pinReset(KeyMuxCSpin[2]);	pinReset(KeyMuxCSpin[1]);		pinReset(KeyMuxCSpin[0]);	
+		case 0: 		pinReset(KeyA0_7CSpin[2]);	pinReset(KeyA0_7CSpin[1]);		pinReset(KeyA0_7CSpin[0]);	
 			break;		//000                                                          
-		case 1:			pinReset(KeyMuxCSpin[2]);	pinReset(KeyMuxCSpin[1]);		pinSet(KeyMuxCSpin[0]);		
+		case 1:			pinReset(KeyA0_7CSpin[2]);	pinReset(KeyA0_7CSpin[1]);		pinSet(KeyA0_7CSpin[0]);		
 			break;		//001		                                                        
-		case 2:			pinReset(KeyMuxCSpin[2]);	pinSet(KeyMuxCSpin[1]);			pinReset(KeyMuxCSpin[0]);	
+		case 2:			pinReset(KeyA0_7CSpin[2]);	pinSet(KeyA0_7CSpin[1]);			pinReset(KeyA0_7CSpin[0]);	
 			break;		//010                                                          
-		case 3:			pinReset(KeyMuxCSpin[2]);	pinSet(KeyMuxCSpin[1]);			pinSet(KeyMuxCSpin[0]);		
+		case 3:			pinReset(KeyA0_7CSpin[2]);	pinSet(KeyA0_7CSpin[1]);			pinSet(KeyA0_7CSpin[0]);		
 			break;		//011		                                                        
-		case 4:			pinSet(KeyMuxCSpin[2]);		pinReset(KeyMuxCSpin[1]);		pinReset(KeyMuxCSpin[0]);	
+		case 4:			pinSet(KeyA0_7CSpin[2]);		pinReset(KeyA0_7CSpin[1]);		pinReset(KeyA0_7CSpin[0]);	
 			break;		//100                                                          
-		case 5:			pinSet(KeyMuxCSpin[2]);		pinReset(KeyMuxCSpin[1]);		pinSet(KeyMuxCSpin[0]);		
+		case 5:			pinSet(KeyA0_7CSpin[2]);		pinReset(KeyA0_7CSpin[1]);		pinSet(KeyA0_7CSpin[0]);		
 			break;		//101                                                          
-		case 6:			pinSet(KeyMuxCSpin[2]);		pinSet(KeyMuxCSpin[1]);			pinReset(KeyMuxCSpin[0]);	
+		case 6:			pinSet(KeyA0_7CSpin[2]);		pinSet(KeyA0_7CSpin[1]);			pinReset(KeyA0_7CSpin[0]);	
 			break;		//110                                                         
-		case 7:			pinSet(KeyMuxCSpin[2]);		pinSet(KeyMuxCSpin[1]);			pinSet(KeyMuxCSpin[0]);		
+		case 7:			pinSet(KeyA0_7CSpin[2]);		pinSet(KeyA0_7CSpin[1]);			pinSet(KeyA0_7CSpin[0]);		
 			break;		//111                                                          
                                                    
 
@@ -247,12 +247,12 @@ int getKeyData(int argc, char **argv)
 	if (argc ==4)
 	{
 		uint8_t 	KeyChannel=atoi(argv[1]);
-		uint8_t 	KeyMux=atoi(argv[2]);
+		uint8_t 	KeyA0_7=atoi(argv[2]);
 		
 		StreamDataCNT=atoi(argv[3]);
 				
 		SetKeyChannel(KeyChannel);
-		SetKeyMux(KeyMux);
+		SetKeyA0_7(KeyA0_7);
 	}
 	else
 	{
@@ -270,6 +270,8 @@ static void StreamData_Thread_entry(void *parameter)
 	static int time_stop=0;
 	static uint8_t time_once=0;
 	static float KeyVolt_AdcVal=0;
+	
+	static float KeyPress_AdcVal=0;
 	
 	while (1)
 	{  
@@ -290,9 +292,13 @@ static void StreamData_Thread_entry(void *parameter)
 					rt_kprintf("start time:%dms\n",HAL_GetTick());
 				}				
 				KeyVolt_AdcVal=KeyVolt_AdcVal * avg_factor + (1-avg_factor) * GetADCReg_FilterVal(2,1);
-
-				sprintf(strKeyPress,"%.3f",ConvertADC_to_mV(1,GetADCReg_FilterVal(1,1)));	
 				
+//				KeyPress_AdcVal=KeyPress_AdcVal * 0.2 + 0.8 * GetADCReg_FilterVal(1,1);
+////				
+				sprintf(strKeyPress,"%.3f",ConvertADC_to_mV(1,GetADCReg_FilterVal(1,1)));	
+
+//				sprintf(strKeyPress,"%.3f",ConvertADC_to_mV(1,KeyPress_AdcVal));	
+					
 				sprintf(strKeyVoltage,"%.1f", ConvertADC_to_mV(2,KeyVolt_AdcVal));	
 				
 				CaptureNumber = OverflowCount*65535 + __HAL_TIM_GET_COUNTER(&htim2);						

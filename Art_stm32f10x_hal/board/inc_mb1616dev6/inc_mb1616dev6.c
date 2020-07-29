@@ -126,7 +126,7 @@ static void input_trigger_output(void)
 	{
 		outputSet(channel,inputGet(channel));
 	}
-	if(pca9539a_is_inited>=3)
+	//if(pca9539a_is_inited>=3)
 	{
 		for(u8 channel=1;channel<17;channel++)
 		{

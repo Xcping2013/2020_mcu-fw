@@ -40,7 +40,7 @@ void SystemClock_Config_12MHZ(void);
 
 void SystemClock_Config(void)
 {
-	SystemClock_Config_12MHZ();
+	SystemClock_Config_8MHZ();
 }
 
 void SystemClock_Config_8MHZ(void)

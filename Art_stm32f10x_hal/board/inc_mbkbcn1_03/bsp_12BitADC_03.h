@@ -3,6 +3,8 @@
 
 #include "bsp_defines.h"
 
+//extern uint8_t KeyA0_7;
+
 void bsp_12BitADC_init(void);
 
 float GetADCReg_FilterVal(uint8_t ch,uint8_t times);
