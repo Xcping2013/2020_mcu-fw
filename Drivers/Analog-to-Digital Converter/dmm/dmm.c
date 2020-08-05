@@ -112,6 +112,7 @@ void dmm_get(uint8_t dmm_data_type,uint8_t dmm_fun_type)
 				break;
 		
 		case sps:
+				adc_set_sps(dmm_fun_type,1);
 			  break;
 		
 		case gain:								
@@ -136,7 +137,7 @@ void dmm_set(uint8_t dmm_data_type,uint8_t dmm_fun_type, char* value)
 				break;
 		
 		case sps:
-	
+					rt_kprintf("get sps[%d]=%d\n",dmm_fun_type,adc_sps_rw(1, 1 ));	
 		break;
 				
 		case gain:			
@@ -167,26 +168,30 @@ static void	printf_cmdList_dmm(void)
 	rt_kprintf("dmm usage: \n");
 	rt_kprintf("dmm get <type> <fun>\n");	
 
-	rt_kprintf("    type: data | gain | offset \n");
-	rt_kprintf("    fun: DMM_FUNC_DCV_100mV | DMM_FUNC_OHM_10R_4W | DMM_FUNC_DCI_500mA\n");
+	rt_kprintf("    type: data | gain | offset | sps\n");
+	rt_kprintf("    fun: DMM_FUNC_DCV_10V | DMM_FUNC_DCV_100mV | DMM_FUNC_DCI_500mA | DMM_FUNC_DCI_100mA | DMM_FUNC_OHM_10R_4W\n");
+	
+	rt_kprintf("dmm set|get averTimes <times>\n");	
 	rt_kprintf("dmm set <type> <fun> <value>\n");	
-	rt_kprintf("    type: gain | offset \n");
-	rt_kprintf("    fun: DMM_FUNC_DCV_100mV | DMM_FUNC_OHM_10R_4W | DMM_FUNC_DCI_500mA\n");
+	rt_kprintf("    type: gain | offset | sps\n");
+	rt_kprintf("    fun: DMM_FUNC_DCV_10V | DMM_FUNC_DCV_100mV | DMM_FUNC_DCI_500mA | DMM_FUNC_DCI_100mA | DMM_FUNC_OHM_10R_4W\n");
 }
 static void printf_cmdList_dmm_set(void)
 {
 		rt_kprintf("\ndmm set usage: \n");	
-		rt_kprintf("dmm set gain <fun> <value>\n");	
-		rt_kprintf("dmm set offset <fun> <value>\n");
-		
+		rt_kprintf("dmm set gain|offset|sps <fun> <value>\n");		
 }
 static void printf_cmdList_dmm_get(void)
 {
 	rt_kprintf("\ndmm get usage: \n");
-	rt_kprintf("dmm get <data|gain|offset> <fun>\n");
+	rt_kprintf("dmm get <data|gain|offset|sps> <fun>\n");
 }
 
 /*****************************************************************************************/
+/*
+由于不需要实时采集数据去显示或者控制相关设备 只响应上位机及时命令，顾可单次转换采集多次再处理返回便可
+
+*/
 int dmm(int argc, char **argv)
 {
 	int result = REPLY_OK;

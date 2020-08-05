@@ -336,7 +336,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER, RT_USING_ARM_LIBC, STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>.;rt-thread\include;applications;board;board\CubeMX_Config\Inc;board\ports;libraries\HAL_Drivers;libraries\HAL_Drivers\config;rt-thread\libcpu\arm\common;rt-thread\libcpu\arm\cortex-m3;rt-thread\components\drivers\include;rt-thread\components\finsh;rt-thread\components\libc\compilers\armlibc;rt-thread\components\libc\compilers\common;libraries\STM32F1xx_HAL\CMSIS\Device\ST\STM32F1xx\Include;libraries\STM32F1xx_HAL\STM32F1xx_HAL_Driver\Inc;libraries\STM32F1xx_HAL\CMSIS\Include;..\rtt_user_manage;..\Drivers\bsp_mcu;..\Drivers\eeprom\at24cxx;.\board\inc_mbkbcn1;..\Drivers\Analog-to-Digital Converter\mcp3421;..\Drivers\gpio expansion\pca95xx;..\Drivers\motor controller\tmc429;..\Drivers\led_drivers\tlc5973;..\Drivers\light senosr\isl29125 rgb;.\board\inc_mbtmc429;..\Drivers\Analog-to-Digital Converter\ads1220;..\Drivers\Analog-to-Digital Converter\dmm;..\Drivers\Analog-to-Digital Converter\ad7124</IncludePath>
+              <IncludePath>.;rt-thread\include;applications;board;board\CubeMX_Config\Inc;board\ports;libraries\HAL_Drivers;libraries\HAL_Drivers\config;rt-thread\libcpu\arm\common;rt-thread\libcpu\arm\cortex-m3;rt-thread\components\drivers\include;rt-thread\components\finsh;rt-thread\components\libc\compilers\armlibc;rt-thread\components\libc\compilers\common;libraries\STM32F1xx_HAL\CMSIS\Device\ST\STM32F1xx\Include;libraries\STM32F1xx_HAL\STM32F1xx_HAL_Driver\Inc;libraries\STM32F1xx_HAL\CMSIS\Include;..\rtt_user_manage;..\Drivers\bsp_mcu;..\Drivers\eeprom\at24cxx;.\board\inc_mbkbcn1;..\Drivers\Analog-to-Digital Converter\mcp3421;..\Drivers\gpio expansion\pca95xx;..\Drivers\motor controller\tmc429;..\Drivers\led_drivers\tlc5973;..\Drivers\light senosr\isl29125 rgb;.\board\inc_mbtmc429;..\Drivers\Analog-to-Digital Converter\ads1220;..\Drivers\Analog-to-Digital Converter\dmm;..\Drivers\Analog-to-Digital Converter\ad7124;.\board\INC-MBAD7124-DMM</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -2264,6 +2264,74 @@
         </Group>
         <Group>
           <GroupName>board_fbuirmea</GroupName>
+          <GroupOption>
+            <CommonProperty>
+              <UseCPPCompiler>0</UseCPPCompiler>
+              <RVCTCodeConst>0</RVCTCodeConst>
+              <RVCTZI>0</RVCTZI>
+              <RVCTOtherData>0</RVCTOtherData>
+              <ModuleSelection>0</ModuleSelection>
+              <IncludeInBuild>0</IncludeInBuild>
+              <AlwaysBuild>2</AlwaysBuild>
+              <GenerateAssemblyFile>2</GenerateAssemblyFile>
+              <AssembleAssemblyFile>2</AssembleAssemblyFile>
+              <PublicsOnly>2</PublicsOnly>
+              <StopOnExitCode>11</StopOnExitCode>
+              <CustomArgument></CustomArgument>
+              <IncludeLibraryModules></IncludeLibraryModules>
+              <ComprImg>1</ComprImg>
+            </CommonProperty>
+            <GroupArmAds>
+              <Cads>
+                <interw>2</interw>
+                <Optim>0</Optim>
+                <oTime>2</oTime>
+                <SplitLS>2</SplitLS>
+                <OneElfS>2</OneElfS>
+                <Strict>2</Strict>
+                <EnumInt>2</EnumInt>
+                <PlainCh>2</PlainCh>
+                <Ropi>2</Ropi>
+                <Rwpi>2</Rwpi>
+                <wLevel>0</wLevel>
+                <uThumb>2</uThumb>
+                <uSurpInc>2</uSurpInc>
+                <uC99>2</uC99>
+                <useXO>2</useXO>
+                <v6Lang>0</v6Lang>
+                <v6LangP>0</v6LangP>
+                <vShortEn>2</vShortEn>
+                <vShortWch>2</vShortWch>
+                <v6Lto>2</v6Lto>
+                <v6WtE>2</v6WtE>
+                <v6Rtti>2</v6Rtti>
+                <VariousControls>
+                  <MiscControls></MiscControls>
+                  <Define></Define>
+                  <Undefine></Undefine>
+                  <IncludePath></IncludePath>
+                </VariousControls>
+              </Cads>
+              <Aads>
+                <interw>2</interw>
+                <Ropi>2</Ropi>
+                <Rwpi>2</Rwpi>
+                <thumb>2</thumb>
+                <SplitLS>2</SplitLS>
+                <SwStkChk>2</SwStkChk>
+                <NoWarn>2</NoWarn>
+                <uSurpInc>2</uSurpInc>
+                <useXO>2</useXO>
+                <uClangAs>2</uClangAs>
+                <VariousControls>
+                  <MiscControls></MiscControls>
+                  <Define></Define>
+                  <Undefine></Undefine>
+                  <IncludePath></IncludePath>
+                </VariousControls>
+              </Aads>
+            </GroupArmAds>
+          </GroupOption>
           <Files>
             <File>
               <FileName>inc_fbuirmea_04.c</FileName>
@@ -2274,6 +2342,21 @@
               <FileName>ad7124_app.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\board\inc_fbuirmea_04\ad7124_app.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>INC-MBAD7124-DMM</GroupName>
+          <Files>
+            <File>
+              <FileName>ad7124_dmm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\board\INC-MBAD7124-DMM\ad7124_dmm.c</FilePath>
+            </File>
+            <File>
+              <FileName>INC-MBAD7124-DMM-01.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\board\INC-MBAD7124-DMM\INC-MBAD7124-DMM-01.c</FilePath>
             </File>
           </Files>
         </Group>

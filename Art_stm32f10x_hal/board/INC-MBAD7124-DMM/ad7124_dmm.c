@@ -45,7 +45,7 @@ c. 选择寄存器树中的Oset0寄存器，检查校准是否已执行，并且系数是否改变
 #include "ad7124.h"
 #include "ad7124_regs.h"
 
-#include "ad7124_app.h"
+#include "ad7124_dmm.h"
 #include "dmm.h"
 
 #define INVALID_VAL -1 /* Invalid argument */
@@ -55,11 +55,11 @@ c. 选择寄存器树中的Oset0寄存器，检查校准是否已执行，并且系数是否改变
 struct ad7124_dev ad7124_dev0;                      /* A new driver instance */
 struct ad7124_dev *ad7124_handler0 = &ad7124_dev0; 	/* A driver handle to pass around */
 enum ad7124_registers regNr;                       	/* Variable to iterate through registers */
-long ADCtimeout = 1000;                             	/* Number of tries before a function times out */
+long ADCtimeout = 3000;                             	/* Number of tries before a function times out */
 long ret = 0;                                    /* Return value */
 
 static uint8_t AD_PGA_Set=1;
-static uint16_t AD_Iout_Set=1000;	//uA
+static uint16_t AD_Iout_Set_uA=1000;	//uA
 
 /*---------------------------AD7124--BSP ---------------------------------------------------------------
 */
@@ -164,9 +164,9 @@ int32_t AD7124_GetAverADValue(struct ad7124_dev *device)
 
 	return sum/(DMM.averTimes*1.0);
 }
-double AD7124_AdValueToVotage(double ADvalue)	//单极性无符号
+double AD7124_AdValue2uV(double ADvalue)	//单极性无符号
 {
-	return  (ADvalue*2500000.0)/16777216 ;
+	return  (ADvalue*(2500000.0/16777216)) ;
 }
 /*---------------------------AD7124--APP ---------------------------------------------------------------
 */
@@ -180,7 +180,7 @@ void SetAD7124ToMatchFun( int _Func )
 	if( dmm_fun_type_old != _Func )
 	{
 		dmm_fun_type_old = _Func;
-		
+		//SET0
 		if(_Func==DMM_FUNC_DCV_100mV || _Func== DMM_FUNC_DCV_1V || _Func== DMM_FUNC_DCV_10V || _Func== DMM_FUNC_DCV_25V)
 		{
 			//	AD7124_TRACE("dmm_fun_type=%d\n",_Func);
@@ -192,7 +192,20 @@ void SetAD7124ToMatchFun( int _Func )
 			
 			 ad7124_regs[AD7124_IOCon1].value=0x0000;			//Iout_OFF
 		}
-		else if(_Func==DMM_FUNC_DCI_100mA || _Func== DMM_FUNC_DCI_1A)
+		//SET1
+		else if(_Func==DMM_FUNC_DCI_100mA	|| _Func==DMM_FUNC_DCI_500mA || _Func==DMM_FUNC_DCI_1A)
+		{
+			
+			 ad7124_regs[AD7124_Channel_0].value=0x0064;	//AIN3+、AIN4- SET0 CH_DIS_EN						
+			 ad7124_regs[AD7124_Channel_1].value=0x90c7;	//AIN6+、AIN7- SET1	CH_EN												
+			 ad7124_regs[AD7124_Channel_2].value=0x2022;	//AIN1+、AIN2- SET2 CH_DIS_EN	
+			 ad7124_regs[AD7124_Channel_3].value=0x30c7;	//AIN6+、AIN7- SET3	CH_DIS_EN
+			
+			 ad7124_regs[AD7124_IOCon1].value=0x0000;			//Iout_OFF			
+			
+		}
+#if 0
+		else if(_Func==DMM_FUNC_DCI_100mA)
 		{
 			 ad7124_regs[AD7124_Channel_0].value=0x0064;	//AIN3+、AIN4- SET0 CH_DIS_EN						
 			 ad7124_regs[AD7124_Channel_1].value=0x10c7;	//AIN6+、AIN7- SET1	CH_DIS_EN												
@@ -201,6 +214,17 @@ void SetAD7124ToMatchFun( int _Func )
 			
 			 ad7124_regs[AD7124_IOCon1].value=0x0000;			//Iout_OFF
 		}
+		else if(_Func== DMM_FUNC_DCI_1A)
+		{
+			 ad7124_regs[AD7124_Channel_0].value=0x0064;	//AIN3+、AIN4- SET0 CH_DIS_EN						
+			 ad7124_regs[AD7124_Channel_1].value=0x90c7;	//AIN6+、AIN7- SET1	CH_EN												
+			 ad7124_regs[AD7124_Channel_2].value=0x2022;	//AIN1+、AIN2- SET2 CH_DIS_EN	
+			 ad7124_regs[AD7124_Channel_3].value=0x30c7;	//AIN6+、AIN7- SET3	CH_DIS_EN
+			
+			 ad7124_regs[AD7124_IOCon1].value=0x0000;			//Iout_OFF
+		}
+#endif
+		//SET2
 		else if(_Func==DMM_FUNC_OHM_10R_4W || _Func== DMM_FUNC_OHM_10K_4W)
 		{
 			ad7124_regs[AD7124_Channel_0].value=0x0064;	//AIN3+、AIN4- SET0 CH_DIS_EN	
@@ -208,7 +232,7 @@ void SetAD7124ToMatchFun( int _Func )
 			ad7124_regs[AD7124_Channel_2].value=0xA022;	//AIN1+、AIN2- SET2 CH_EN		
 			ad7124_regs[AD7124_Channel_3].value=0x30c7;	//AIN6+、AIN7- SET3	CH_DIS_EN
 	
-			ad7124_regs[AD7124_Config_2].value=0x077;		//PGA=128 REF_INT BUF_ON 无极性 0x877 极性
+//			ad7124_regs[AD7124_Config_2].value=0x077;		//PGA=128 REF_INT BUF_ON 无极性 0x877 极性
 																										//1*0.001*128=0.128V	
 //#if defined (USING_EX_CURRENT_SOURCE)	
 //					//pinSet(OHM_10mA_Out_PIN);
@@ -242,28 +266,35 @@ void SetAD7124ToMatchFun( int _Func )
 			/*
 			0.15ohm *0.1 *128=1.92V		PGA=128
 			*/
-			case DMM_FUNC_DCI_100mA:	  ad7124_regs[AD7124_Config_3].value=0x077;		AD_PGA_Set=128;						
+			case DMM_FUNC_DCI_100mA:	  ad7124_regs[AD7124_Config_1].value=0x077;		AD_PGA_Set=128;						
+				break;
+			/*
+			0.15ohm *0.5 *32=2.4				PGA=32
+			*/
+			case DMM_FUNC_DCI_500mA:			
+						ad7124_regs[AD7124_Config_1].value=0x075;					AD_PGA_Set=32;
+																										
 				break;
 			/*
 			0.15ohm *1 *16=2.4V				PGA=16
 			*/
 			case DMM_FUNC_DCI_1A:			
-					ad7124_regs[AD7124_Config_1].value=0x074;					AD_PGA_Set=16;
-					 ad7124_regs[AD7124_Channel_1].value=0x90c7;																									
-					 ad7124_regs[AD7124_Channel_3].value=0x30c7;		
+					ad7124_regs[AD7124_Config_1].value=0x074;						AD_PGA_Set=16;
+//					 ad7124_regs[AD7124_Channel_1].value=0x90c7;																									
+//					 ad7124_regs[AD7124_Channel_3].value=0x30c7;		
 				break;
 			/*
 			10ohm *0.001 *128=1.28V		PGA=128
 			*/
 			case DMM_FUNC_OHM_10R_4W:	
-					ad7124_regs[AD7124_Config_2].value=0x0077;		AD_PGA_Set=128;		AD_Iout_Set=1000;
+					ad7124_regs[AD7124_Config_2].value=0x0077;		AD_PGA_Set=128;		AD_Iout_Set_uA=1000;
 					ad7124_regs[AD7124_IOCon1].value=0x0600;			//AIN0=IOUT0=1000uA		
 				break;	
 			/*
 			10kohm *0.0001 *2=2V			PGA=2
 			*/
 			case DMM_FUNC_OHM_10K_4W:	
-				ad7124_regs[AD7124_Config_2].value=0x0071;		AD_PGA_Set=2;		AD_Iout_Set=100;
+				ad7124_regs[AD7124_Config_2].value=0x0071;		AD_PGA_Set=2;		AD_Iout_Set_uA=100;
 				ad7124_regs[AD7124_IOCon1].value=0x0200;			//AIN0=IOUT0=100uA					
 				break;
 			default:
@@ -285,39 +316,154 @@ void SetAD7124ToMatchFun( int _Func )
 		//AD7124_TRACE("ad7124_write_register over\n");
 	}
 			//单次转换OK后转入空闲模式，需要重新再开打开转换
-		ad7124_regs[AD7124_ADC_Control].value=0x0184;
-		ad7124_write_register(ad7124_handler0,ad7124_regs[AD7124_ADC_Control]);	
+//	ad7124_regs[AD7124_ADC_Control].value=0x0184;
+//	ad7124_write_register(ad7124_handler0,ad7124_regs[AD7124_ADC_Control]);	
 }
 void adc_hw_init(void)
 {
 	ad7124_init();
 }
+
+uint32_t FilterWordHex[sps_cnt]=
+{
+0x607FF,0x607FF,0x60780,0x60180,0x60140,
+0x600F0,0x60078,0x6003C,0x6001E,0x6000F,
+0x60008,0x60004,0x60002,0x60001,
+
+};
+
+static uint32_t FilterWordTemp=0x60180;
+
+uint32_t adc_sps_rw(uint8_t rw_cs, uint16_t sps_value )
+{
+	if(rw_cs)
+	{
+		
+	}
+	else 
+	{
+		switch(sps_value)
+		{
+			case 10: FilterWordTemp=FilterWordHex[sps_10];
+				break;
+			case 20: FilterWordTemp=FilterWordHex[sps_20];
+				break;			
+			case 40: FilterWordTemp=FilterWordHex[sps_40];
+				break;	
+			case 50: FilterWordTemp=FilterWordHex[sps_50];
+				break;	
+			case 60: FilterWordTemp=FilterWordHex[sps_60];
+				break;	
+			case 80: FilterWordTemp=FilterWordHex[sps_80];
+				break;		
+			case 160: FilterWordTemp=FilterWordHex[sps_160];
+				break;			
+			case 320: FilterWordTemp=FilterWordHex[sps_320];
+				break;	
+			case 640: FilterWordTemp=FilterWordHex[sps_640];
+				break;	
+			case 1280: FilterWordTemp=FilterWordHex[sps_1280];
+				break;
+			case 2400: FilterWordTemp=FilterWordHex[sps_2400];
+				break;		
+			case 4800: FilterWordTemp=FilterWordHex[sps_4800];
+				break;
+			case 9600: FilterWordTemp=FilterWordHex[sps_9600];
+				break;	
+			case 19200: FilterWordTemp=FilterWordHex[sps_19200];
+				break;					
+			default:
+				break;
+		}			
+		
+	}
+	return FilterWordTemp;	
+}
+void adc_set_sps( int _Func , uint16_t sps_set )
+{
+	
+	if( _Func > DMM_FUNC_UNKNOW && _Func < DMM_FUNC_COUNT )
+	{
+		adc_sps_rw(0,sps_set);
+	}
+	/*
+	FULL POWER MODE
+	Sinc4
+	
+	SPS			10			20			40			50			60			80			160     320			640			1280		2400		4800		9600		19200
+	Filter	607FF		60780		601E0		60180		60140		600F0		60078		6003C		6001E		6000F		60008		60004		60002		60001
+	
+	*/
+	if(_Func==DMM_FUNC_DCV_100mV || _Func== DMM_FUNC_DCV_1V || _Func== DMM_FUNC_DCV_10V || _Func== DMM_FUNC_DCV_25V)
+	{	
+		 ad7124_regs[AD7124_Filter_0].value=FilterWordTemp;	//AIN3+、AIN4- SET0 CH_EN
+		 ad7124_write_register(ad7124_handler0,ad7124_regs[AD7124_Filter_0]);	
+	}
+	//电流测量档位可以共用一个SET
+	else if(_Func==DMM_FUNC_DCI_100mA	|| _Func==DMM_FUNC_DCI_500mA || _Func== DMM_FUNC_DCI_1A)
+	{
+		ad7124_regs[AD7124_Filter_1].value=FilterWordTemp;	//AIN6+、AIN7- SET1	CH_EN
+		ad7124_write_register(ad7124_handler0,ad7124_regs[AD7124_Filter_1]);	
+	}
+	else if(_Func==DMM_FUNC_OHM_10R_4W || _Func== DMM_FUNC_OHM_10K_4W)
+	{	
+		ad7124_regs[AD7124_Filter_2].value=FilterWordTemp;	//AIN1+、AIN2- SET2 CH_EN		
+		ad7124_write_register(ad7124_handler0,ad7124_regs[AD7124_Filter_2]);	
+	}
+};
+
 void adc_print_data( int _Func )
 {
-	double DMM_Votage;
+	double ADC_Votage_uV;
 	char StrAdcData[10];
 	
 	SetAD7124ToMatchFun(_Func);
 	
 	if( _Func > DMM_FUNC_UNKNOW && _Func < DMM_FUNC_COUNT )
 	{	
-		//DMM_Votage=((ADvalue-DMM.CTable[_Func])*DMM.KTable[_Func])/1000;
+		//ADC_Votage_uV=AD7124_AdValue2uV((AD7124_GetAverADValue(ad7124_handler0)));
+
+		//ADC_Votage_uV=((ADvalue-DMM.CTable[_Func])*DMM.KTable[_Func])/1000;
+		//先采集过滤前面相关数据
+		//for(uint8_t i=0;i<10;i++)
+		{
+			ad7124_regs[AD7124_ADC_Control].value=0x0184;
+			ad7124_write_register(ad7124_handler0,ad7124_regs[AD7124_ADC_Control]);	
+			
+			ADC_Votage_uV=AD7124_AdValue2uV((AD7124_GetAverADValue(ad7124_handler0)));
+			
+		}
+	}
+	/*
+	电压采集暂时都是采用分压电阻进行1/10 分压 后续需要对实际小电压采集进行调整
+	*/
+	if(_Func==DMM_FUNC_DCV_100mV || _Func==DMM_FUNC_DCV_1V)	//uV/1000=mV
+	{
+		sprintf(StrAdcData,"%.2lf",(ADC_Votage_uV*SAMPLE_RES_GAIN/AD_PGA_Set)/1000*DMM.KTable[_Func]+DMM.CTable[_Func]);
+		AD7124_TRACE("Voltage=%s mV\n",StrAdcData);			
+	}
+	else	if(_Func==DMM_FUNC_DCV_10V || _Func==DMM_FUNC_DCV_25V)
+	{
+		sprintf(StrAdcData,"%.2lf",(ADC_Votage_uV*SAMPLE_RES_GAIN/AD_PGA_Set)*DMM.KTable[_Func]/1000000+DMM.CTable[_Func]);	
+		AD7124_TRACE("Voltage=%s V\n",StrAdcData);
+	}
 		
-		DMM_Votage=AD7124_AdValueToVotage((AD7124_GetAverADValue(ad7124_handler0)));
-	}
-	if(_Func==DMM_FUNC_DCV_100mV || _Func==DMM_FUNC_DCV_1V||_Func==DMM_FUNC_DCV_10V || _Func==DMM_FUNC_DCV_25V)
+
+	else if(_Func==DMM_FUNC_DCI_100mA || _Func==DMM_FUNC_DCI_500mA)	////uV/1000=mV/R=mA
 	{
-		sprintf(StrAdcData,"%.3lf",(DMM_Votage*10/AD_PGA_Set)*DMM.KTable[_Func]+DMM.CTable[_Func]);		
-		AD7124_TRACE("Voltage=%s uV\n",StrAdcData);
-	}
-	else if(_Func==DMM_FUNC_DCI_1A || _Func==DMM_FUNC_DCI_100mA )
-	{
-		sprintf(StrAdcData,"%.3lf",(DMM_Votage/(AD_PGA_Set*SAMPLE_RES_OHM))*DMM.KTable[_Func]+DMM.CTable[_Func]);		
+		sprintf(StrAdcData,"%.2lf",(ADC_Votage_uV/1000/(AD_PGA_Set*SAMPLE_RES_OHM))*DMM.KTable[_Func]+DMM.CTable[_Func]);		
 		AD7124_TRACE("Current=%s mA\n",StrAdcData);			
 	}	
-	else if(_Func==DMM_FUNC_OHM_10R_4W || _Func==DMM_FUNC_OHM_10K_4W )
+
+//	else if(_Func==DMM_FUNC_DCI_1A )
+//	{
+//		sprintf(StrAdcData,"%.2lf",(ADC_Votage_uV/(AD_PGA_Set*SAMPLE_RES_OHM))/1000000*DMM.KTable[_Func]+DMM.CTable[_Func]);		
+//		AD7124_TRACE("Current=%s A\n",StrAdcData);			
+//	}	
+	
+	else if(_Func==DMM_FUNC_OHM_10R_4W || _Func==DMM_FUNC_OHM_10K_4W )//uV/uA=R
 	{
-		sprintf(StrAdcData,"%.3lf",(DMM_Votage/(AD_PGA_Set*AD_Iout_Set/1000))*DMM.KTable[_Func]+DMM.CTable[_Func]);		
+		sprintf(StrAdcData,"%.2lf",(ADC_Votage_uV/(AD_PGA_Set*AD_Iout_Set_uA))*1000*DMM.KTable[_Func]+DMM.CTable[_Func]);		
 		AD7124_TRACE("resistor=%s mOHM\n",StrAdcData);			
 	}	
 }
@@ -402,7 +548,7 @@ int ad7124(int argc, char **argv)
 		}
 		else	if (!strcmp(argv[1], "readData"))
 		{
-			//AD7124_AdValueToVotage(AD7124_GetAverADValue(ad7124_handler0));
+			//AD7124_AdValue2uV(AD7124_GetAverADValue(ad7124_handler0));
 			return RT_EOK	; 
 		}
 		else

@@ -5,7 +5,8 @@
 
 #define lenof(a) (sizeof(a)/sizeof((a)[0]))
 
-#define SAMPLE_RES_MOHM  200 //0.2R
+#define SAMPLE_RES_OHM  0.15 			//0.15R
+#define SAMPLE_RES_GAIN  10
 
 enum
 {
@@ -110,6 +111,9 @@ void dmm_init(void);
 
 extern void adc_hw_init(void);
 extern void adc_print_data( int _Func );
+
+extern uint32_t adc_sps_rw(uint8_t rw_cs, uint16_t sps_value );
+extern void adc_set_sps(  int _Func , uint16_t sps_set );
 //
 #endif//__DMM_H__
 
