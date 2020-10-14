@@ -1,5 +1,10 @@
 #include "tmc429.h"
 
+/*
+//__HAL_AFIO_REMAP_SWJ_NOJTAG();
+
+*/
+
 #if 1   //DBG_ENABLE
 	#define DBG_ENABLE	0
 	#if 	( DBG_ENABLE )
@@ -45,6 +50,7 @@ void TMC429_DefaulSetting(void)
 		motorHoming.GoHome[i]				=	FALSE;
 		motorHoming.GoLimit[i]			=	FALSE;
 		motorHoming.HomeSpeed[i]		=	2000;
+		
 	}
 }
 

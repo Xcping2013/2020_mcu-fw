@@ -13,12 +13,12 @@
 
 //
 
-at24cxx_t at24c256=
-{
-	{0},
-	{PC_15,PC_14},	
-	0xA0,	
-};
+//at24cxx_t at24c256=
+//{
+//	{0},
+//	{PC_15,PC_14},	
+//	0xA0,	
+//};
 
 //at24cxx_t at24c256=
 //{
@@ -88,6 +88,7 @@ void at24cxx_hw_init(void)
 		DEG_TRACE("iic device at24c256 [found] addr=%d\n",at24c256.devAddress);
 	}	
 }
+#if 0
 int savedata(int argc, char **argv)
 {
 	uint8_t result = REPLY_OK;
@@ -146,4 +147,5 @@ MSH_CMD_EXPORT(savedata, Save data to page);
 MSH_CMD_EXPORT(readdata, Read data from page);
 //
 
+#endif
 

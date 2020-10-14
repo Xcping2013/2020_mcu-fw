@@ -20,6 +20,7 @@
 
 #include "app_tmc429.h"		
 //#include "inc_fbtmc429.h"	
+#include "inc_projects.h"
 
 #if 1
 	#define DBG_ENABLE	0
@@ -31,9 +32,7 @@
 
 #endif
 
-#define EEPROM_TEST_PAGE_ADDR			 255
-
-char version_string[]="ver3.0.0";
+#define EEPROM_TEST_PAGE_ADDR			 254
 
 uint8_t LED_PIN=PB_2;
 
@@ -59,12 +58,13 @@ int main(void)
     return RT_EOK;
 }
 
+char version_string[]="Ver01";
 
 int mb1616dev6_hw_init(void)
 {		
 	//board.c	rcc_set
 	
-	rt_kprintf("\nFW-MB1616dDEV6-RTT-%d-%d %s build at %s %s\n\n", STM32_FLASH_SIZE/1024, STM32_SRAM_SIZE, version_string, __TIME__, __DATE__);
+	rt_kprintf("\nFW-MB1616dDEV6 %s ROM[%dK] RAM[%dK] build at %s %s\n\n", version_string,STM32_FLASH_SIZE/1024, STM32_SRAM_SIZE,  __TIME__, __DATE__);
 	
 	//cube_hal_inits();	
 	
@@ -75,12 +75,13 @@ int mb1616dev6_hw_init(void)
 	dido_hw_init();
 		
 	tmc429_hw_init();
-//	projectApp_init();
-			
+
+	ProjectAppInit();
+	
 	rt_kprintf("controller init......[ok]\n");
 	rt_kprintf("-------------------------------\n");
 	rt_kprintf("you can type help to list commands and all commands should end with \\r\\n\n");
-	rt_kprintf("-------------------------------\n");
+	rt_kprintf("-------------------------------\n>>");
   return 0;
 }
 //

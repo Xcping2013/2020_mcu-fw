@@ -32,10 +32,13 @@
 */
 /*						BUG
 
-20200701: >!	电机旋转速度不对,发送旋转命令 ram_pdiv被设置为了默认值0 :	TMC429_SetAxisParameter ->	TMC429_ParameterRW -> CMDGetFromUart
-							MB1616DEV6的SPI3->SPI1 IO配置更新
-					>!	向+找原点动作进行时,触发-限位也会有动作
-
+20200701: >!	电机旋转速度不对,发送旋转命令 
+							--->ram_pdiv被设置为了默认值0 :	TMC429_SetAxisParameter ->	TMC429_ParameterRW -> CMDGetFromUart
+							--->MB1616DEV6的SPI3->SPI1 IO配置更新
+							Vmax=2000->pulse speed=1907 只要有进行旋转运行,读取的pulse=1952都对应的Vmax=2047
+				
+					>!	找原点动作进行时,触发反相限位也会有动作;影响不大,正方向运行却触发错限位传感器本身硬件就已经异常
+	
 */
 /**************************************************************************/
 #include "mbtmc429_spi.h"	
@@ -146,7 +149,7 @@ TMC429_PARAM_T motorSetting;
 motorHoming_t motorHoming;
 
 static uint8_t getMotor0_2(uint8_t motor_number);
-static uint8_t getTMC429_DEV(uint8_t motor_number);
+//static uint8_t getTMC429_DEV(uint8_t motor_number);
 static void TMC429_GetAxisParameter(uint8_t motor_number, uint8_t parameter_type);
 static void TMC429_SetAxisParameter(uint8_t motor_number, uint8_t parameter_type, int32_t parameter_value);
 static void SetAmaxBySpeed(u8 mode,u8 motor_number , int32_t speed);	//输入的速度为pulse/s
@@ -231,8 +234,14 @@ void Init429(UCHAR Which429 )
       Write429Zero(Which429, addr|(Motor<<5));
   }
 	//正常应用 默认接传感器的时候 未触发 传感器亮 低电平未限位  
-	Write429Int(Which429, IDX_IF_CONFIG_429, IFCONF_EN_SD|IFCONF_EN_REFR|IFCONF_SDO_INT|IFCONF_INV_DIR);
-	
+	if(motorSetting.limit_level_valid==0)
+	{
+		Write429Int(Which429, IDX_IF_CONFIG_429, IFCONF_EN_SD|IFCONF_EN_REFR|IFCONF_SDO_INT|IFCONF_INV_DIR|IFCONF_INV_REF);
+	}
+	else 
+	{
+		Write429Int(Which429, IDX_IF_CONFIG_429, IFCONF_EN_SD|IFCONF_EN_REFR|IFCONF_SDO_INT|IFCONF_INV_DIR);
+	}
 	//限位不接的时候 高电平 未触发 未限位
 	//Write429Int(Which429, IDX_IF_CONFIG_429, IFCONF_EN_SD|IFCONF_SDO_INT|IFCONF_INV_DIR | IFCONF_INV_REF|IFCONF_EN_REFR);
 
@@ -451,7 +460,7 @@ static uint8_t getMotor0_2(uint8_t motor_number)
 {
 	return (motor_number<3 ? motor_number:(motor_number-3)) ;	
 }
-static uint8_t getTMC429_DEV(uint8_t motor_number)
+uint8_t getTMC429_DEV(uint8_t motor_number)
 {
 	if(motor_number<3)
 	{	
@@ -1007,8 +1016,8 @@ SO:
 static rt_uint8_t MotorSensorStack[ 512 ];
 static struct	rt_thread MotorSensorThread;
 /***************************************************************************/
-void motor_gohome_config(uint8_t motor_number, int home_speed);
-void motor_golimit_config(uint8_t motor_number, int home_speed);
+//void motor_gohome_config(uint8_t motor_number, int home_speed);
+//void motor_golimit_config(uint8_t motor_number, int home_speed);
 
 static void InitOriginSensorAsEXTI(void);
 static void OriginSensorIRQEnable(uint8_t motor_number);

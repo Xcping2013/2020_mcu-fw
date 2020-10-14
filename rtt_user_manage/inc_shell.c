@@ -70,6 +70,7 @@ struct finsh_shell _shell;
 struct finsh_shell *shell;
 //user cmd
 static char *finsh_prompt_custom = ">>";//RT_NULL;
+//static char *finsh_prompt_custom = "";
 
 #if defined(_MSC_VER) || (defined(__GNUC__) && defined(__x86_64__))
 struct finsh_syscall* finsh_syscall_next(struct finsh_syscall* call)

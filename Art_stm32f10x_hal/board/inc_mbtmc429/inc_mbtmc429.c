@@ -43,6 +43,8 @@ ver1.04---中断采集过压报警信号;立即停止电机;循环发送报警字符串
 #include "app_tmc429.h"	
 #include "app_eeprom_24xx.h"
 
+#include "inc_projects.h"
+
 #if 1
 	#define DBG_ENABLE	1
 	#if 	( DBG_ENABLE )
@@ -55,7 +57,6 @@ ver1.04---中断采集过压报警信号;立即停止电机;循环发送报警字符串
 
 #define EEPROM_TEST_PAGE_ADDR			 255
 
-char version_string[]="ver1.0.0";
 
 uint8_t LED_PIN=PD_7;
 
@@ -80,11 +81,13 @@ int main(void)
     return RT_EOK;
 }
 
+char version_string[]="Ver01";
+
 int mbtmc429_hw_init(void)
 {			
 	//board.c	rcc_set
 	
-	rt_kprintf("\nFW-MBTMC429-RTT-%d-%d %s build at %s %s\n\n", STM32_FLASH_SIZE/1024, STM32_SRAM_SIZE, version_string, __TIME__, __DATE__);
+	rt_kprintf("\nFW-MBTMC429 %s ROM[%dK] RAM[%dK] build at %s %s\n\n", version_string,STM32_FLASH_SIZE/1024, STM32_SRAM_SIZE,  __TIME__, __DATE__);
 	
 	delay_ms(10);
 	
@@ -94,10 +97,12 @@ int mbtmc429_hw_init(void)
 
 	tmc429_hw_init();
 	
+	ProjectAppInit();
+	
 	rt_kprintf("controller init......[ok]\n");
 	rt_kprintf("-------------------------------\n");
 	rt_kprintf("you can type help to list commands and all commands should end with \\r\\n\n");
-	rt_kprintf("-------------------------------\n");
+	rt_kprintf("-------------------------------\n>>");
 	
   return 0;
 }

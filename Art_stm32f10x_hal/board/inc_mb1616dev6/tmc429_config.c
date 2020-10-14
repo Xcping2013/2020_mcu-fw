@@ -1,5 +1,7 @@
 #include "tmc429.h"
 
+#include "inc_projects.h"
+
 #if 1   //DBG_ENABLE
 	#define DBG_ENABLE	0
 	#if 	( DBG_ENABLE )
@@ -126,8 +128,8 @@ void TMC429_DefaulSetting(void)
 		
 		motorSetting.saved=DATA_SAVED;
 		
-		motorSetting.limit_level_valid=1;
-		motorSetting.orgin_level_valid=0;
+		motorSetting.limit_level_valid=1;          
+		motorSetting.orgin_level_valid=0;        
 		
 		motorSetting.SpeedChangedFlag[i]= TRUE;		
 		
@@ -142,6 +144,20 @@ void TMC429_DefaulSetting(void)
 		motorHoming.GoLimit[i]			=	FALSE;
 		motorHoming.HomeSpeed[i]		=	2000;
 	}
+	if(WhichProject==LID_OPEN)
+	{
+		motorSetting.limit_level_valid=1;          
+		motorSetting.orgin_level_valid=0;  
+		OriginSensorON[0]=LOW;	OriginSensorON[1]=LOW;	OriginSensorON[2]=LOW;
+		OriginSensorON[3]=LOW;	OriginSensorON[4]=LOW;	OriginSensorON[5]=LOW;
+	}
+	else if(WhichProject==BUTTON_TEST)
+	{
+		motorSetting.limit_level_valid=1;          
+		motorSetting.orgin_level_valid=0;  
+		OriginSensorON[0]=LOW;	OriginSensorON[1]=LOW;	OriginSensorON[2]=LOW;
+		OriginSensorON[3]=LOW;	OriginSensorON[4]=LOW;	OriginSensorON[5]=LOW;			
+	}	
 }
 //
 

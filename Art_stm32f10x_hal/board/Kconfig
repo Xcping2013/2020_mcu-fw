@@ -1,5 +1,7 @@
 menu "Hardware Drivers Config"
 
+#config SOC_STM32F103VE
+
 config SOC_STM32F103CB
     bool
     select SOC_SERIES_STM32F1

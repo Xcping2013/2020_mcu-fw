@@ -2,6 +2,8 @@
 #include "isl29125.h"
 #include "bsp_mcu_delay.h"
 
+static uint8_t rgb_installed=0;
+
 static uint8_t autoMode;
 
 static const isl29125_mode_t modes[] = {
@@ -65,7 +67,7 @@ void isl29125_read_advaule(const isl29125_t *dev, isl29125_rgb_t *dest)
 
 		//DEBUG("%d %d %d %d %d %d\n",bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5]);
     //DEBUG("isl29125_read_rgb: adjusted, unconverted readings: (%5i / %5i / %5i) \n", red, green, blue);
-    printf(":%05i %05i %05i", red, green, blue);
+    printf(":R=%05i G=%05i B=%05i", red, green, blue);
 }
 
 int isl29125_devs_hw_init(void)
@@ -81,20 +83,28 @@ int isl29125_devs_hw_init(void)
 	
 	if (  (isl29125_init(&dev[0]) == 0) &&  (isl29125_init(&dev[1]) == 0) ) 
 	{
-		rt_kprintf("iic device isl29125 light sensor [found]\n");
+		rgb_installed=3;
+		rt_kprintf("iic device isl29125 light sensor [found RGB1+RGB2]\n");
 	}
-	else if (  (isl29125_init(&dev[0]) == 0) ||  (isl29125_init(&dev[1]) == 0) ) 
+	else if (isl29125_init(&dev[0]) == 0) 
 	{
-		rt_kprintf("iic device isl29125 light sensor [no found]\n");
+		rgb_installed=1;
+		rt_kprintf("iic device isl29125 light sensor [found RGB1]\n");
 	}
+	else if (isl29125_init(&dev[1]) == 0 ) 
+	{
+		rgb_installed=2;
+		rt_kprintf("iic device isl29125 light sensor [found RGB2]\n");
+	}	
 	else
 	{
-		//rt_kprintf("[no found]\n"); 
+		rt_kprintf("iic device isl29125 light sensor [no found]\n");
 		return 1;
 	}
-	
-	isl29125_init_int(&dev[0]);
-	isl29125_init_int(&dev[1]);
+	if(rgb_installed & 0x01)
+		isl29125_init_int(&dev[0]);
+	if(rgb_installed & 0x02)
+		isl29125_init_int(&dev[1]);
 	return 0;
 }
 //ARRAY_SIZE(modes)
@@ -103,11 +113,15 @@ void lightSensor(int argc, char **argv)
 	static uint8_t isl29125_isinited=0;
 	 if(isl29125_isinited==0)
 	 {
-		 isl29125_isinited=1;
+		
 		 isl29125_devs_hw_init();
-		 light_sensosr_thread_init();
+		 if(rgb_installed!=0)
+		 { 
+			 isl29125_isinited=1;
+			 light_sensosr_thread_init();
+		 }
 	 }
-    if (argc == 1)
+    if (argc == 1 && rgb_installed!=0)
     {
         rt_kprintf("\n");
 			  rt_kprintf("lightSensor setMode <var>\n");
@@ -136,7 +150,7 @@ void lightSensor(int argc, char **argv)
 				rt_kprintf("lightSensor stopStream\n");
         return ;
     }	
-		else if (argc == 3)
+		else if (argc == 3&& rgb_installed!=0)
 		{
 			if(!strcmp(argv[1], "setMode"))
 			{
@@ -172,10 +186,17 @@ void lightSensor(int argc, char **argv)
 				
 			  for(uint8_t i=0; i<times_temp;i++)
 				{
-					printf("ad1");
-					isl29125_read_advaule(&dev[0], &data[0]);	printf(" ");	
-					printf("ad2");
-					isl29125_read_advaule(&dev[1], &data[1]);	printf("\n");	
+					if(rgb_installed & 0x01)
+					{
+						printf("ad1");
+						isl29125_read_advaule(&dev[0], &data[0]);	printf(" ");	
+					}
+					if(rgb_installed & 0x02)
+					{
+						printf("ad2");
+						isl29125_read_advaule(&dev[1], &data[1]);	printf("\n");	
+					}
+					else printf("\n");	
 					delay_ms(160);
 				}
 			}	
@@ -187,8 +208,16 @@ void lightSensor(int argc, char **argv)
 				{
 					isl29125_read_rgb_lux(&dev[0], &data[0]);
 					isl29125_read_rgb_lux(&dev[1], &data[1]);
-					printf("lux1:%05i %05i %05i,",(int)data[0].red, (int)data[0].green, (int)data[0].blue);
-					printf("lux2:%05i %05i %05i\n",(int)data[1].red, (int)data[1].green, (int)data[1].blue);
+					
+					if(rgb_installed & 0x01)
+					{
+						printf("lux1:R=%05i G=%05i B=%05i,",(int)data[0].red, (int)data[0].green, (int)data[0].blue);
+					}
+					if(rgb_installed & 0x02)
+						printf("lux2:R=%05i G=%05i B=%05i\n",(int)data[1].red, (int)data[1].green, (int)data[1].blue);
+					
+					else printf("\n");	
+					
 					delay_ms(160);
 				}
 			}			
@@ -200,8 +229,13 @@ void lightSensor(int argc, char **argv)
 				{
 					isl29125_read_rgb_color(&dev[0], &data8bit[0]);
 					isl29125_read_rgb_color(&dev[1], &data8bit[1]);
-					printf("RGB1:%03i %03i %03i ", data8bit[0].r, data8bit[0].g, data8bit[0].b);
-					printf("RGB2:%03i %03i %03i\n", data8bit[1].r, data8bit[1].g, data8bit[1].b);
+					
+					if(rgb_installed & 0x01)
+					
+					printf("RGB1:R=%03i G=%03i B=%03i ", data8bit[0].r, data8bit[0].g, data8bit[0].b);
+					if(rgb_installed & 0x02)
+					printf("RGB2:R=%03i G=%03i B=%03i\n", data8bit[1].r, data8bit[1].g, data8bit[1].b);
+					else printf("\n");	
 					delay_ms(160);
 				}
 			}	
@@ -230,22 +264,40 @@ static void light_sensosr_entry(void *parameter)
 		{
 			isl29125_read_rgb_color(&dev[0], &data8bit[0]);
 			isl29125_read_rgb_color(&dev[1], &data8bit[1]);
-			printf("RGB1:%03i %03i %03i ", data8bit[0].r, data8bit[0].g, data8bit[0].b);
-			printf("RGB2:%03i %03i %03i\n", data8bit[1].r, data8bit[1].g, data8bit[1].b);	
+			if(rgb_installed & 0x01)
+			{
+				//printf("rgb_installed=%d",rgb_installed);
+				printf("RGB1:R=%03i G=%03i B=%03i ", data8bit[0].r, data8bit[0].g, data8bit[0].b);
+			}
+			if(rgb_installed & 0x02)
+			{
+				printf("RGB2:R=%03i G=%03i B=%03i\n", data8bit[1].r, data8bit[1].g, data8bit[1].b);	
+			}
+			else printf("\n");	
 		}
 		else if(autoMode==2)
 		{
 			isl29125_read_rgb_lux(&dev[0], &data[0]);
 			isl29125_read_rgb_lux(&dev[1], &data[1]);
-			printf("lux1:%05i %05i %05i,",(int)data[0].red, (int)data[0].green, (int)data[0].blue);
-			printf("lux2:%05i %05i %05i\n",(int)data[1].red, (int)data[1].green, (int)data[1].blue);
+			if(rgb_installed & 0x01)
+			printf("lux1:R=%05i G=%05i B=%05i,",(int)data[0].red, (int)data[0].green, (int)data[0].blue);
+			if(rgb_installed & 0x02)
+			printf("lux2:R=%05i G=%05i B=%05i\n",(int)data[1].red, (int)data[1].green, (int)data[1].blue);
+			else printf("\n");	
 		}
 		else if(autoMode==3)
 		{
+			if(rgb_installed & 0x01)
+			{
 			printf("ad1");
 			isl29125_read_advaule(&dev[0], &data[0]);	printf(" ");	
+			}
+			if(rgb_installed & 0x02)
+			{
 			printf("ad2");
 			isl29125_read_advaule(&dev[1], &data[1]);	printf("\n");	
+			}
+			else printf("\n");	
 		}
 		rt_thread_mdelay(160);
 	}

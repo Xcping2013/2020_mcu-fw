@@ -556,13 +556,13 @@ uint8_t MB1616_DIDO_Finsh(char* string)
 		readoutputs();
 		return 255;
 	}
-	if(!strncmp("input.",string,6))
-	{
-		return 6;
-	}
-	if(!strncmp("output.",string,7))
+	if(!strncmp(".input.",string,7))
 	{
 		return 7;
+	}
+	if(!strncmp(".output.",string,8))
+	{
+		return 8;
 	}
 	return 0;
 }

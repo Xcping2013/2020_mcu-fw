@@ -1,6 +1,10 @@
 #include "platform_drivers.h"
 #include "INC-MBAD7124-DMM-01.h"
 
+/*
+__HAL_AFIO_REMAP_SWJ_DISABLE();
+*/
+
 #if 1
 	#define DBG_ENABLE	1
 	#if 	( DBG_ENABLE )
