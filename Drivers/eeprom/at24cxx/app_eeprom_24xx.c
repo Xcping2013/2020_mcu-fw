@@ -274,7 +274,7 @@ uint8_t at24cxx_msh1(char *string)
 	}
 }
 
-MSH_CMD_EXPORT(savedata, Save data to page);
+MSH_CMD_EXPORT(savedata, Save data-without spaces to page);
 MSH_CMD_EXPORT(readdata, Read data from page);
 //
 uint8_t at24cxx_msh(char *string)

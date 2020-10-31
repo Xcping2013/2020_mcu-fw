@@ -2424,7 +2424,7 @@ int motor(int argc, char **argv)
 #endif
 /****************************************FBTMC429_Motor_msh_cmd****************************************************/
 /*************************************************************************************************************/
-MSH_CMD_EXPORT(motor, control motor motion by commands);
+MSH_CMD_EXPORT(motor, All motor commands);
 
 /**********************************motor autoResetByProID with button & cmd***************************************
 																						motion control

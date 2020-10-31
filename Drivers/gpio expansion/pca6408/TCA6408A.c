@@ -15,6 +15,16 @@
 Hardware Address Pin Allows Two TCA6408A
 Internal Power-On Reset
 Power Up With All Channels Configured as Inputs
+
+register
+00 					Input Port 			Read byte 					xxxx xxxx
+01 					Output Port 		Read/write byte 		1111 1111
+02 			Polarity Inversion 	Read/write byte 		0000 0000		(allows polarity inversion of pins defined as inputs by the Configuration)
+03			 Configuration 			Read/write byte 		1111 1111
+
+Configuration Register3:
+	If a bit in this register is set to 1,		 the corresponding port pin is enabled as an input.
+	If a bit in this register is cleared to 0, the corresponding port pin is enabled as an output.
 */
 
 #include "TCA6408A.h"
@@ -28,6 +38,8 @@ Power Up With All Channels Configured as Inputs
 #endif
 
 #endif
+
+//Device Address Slave Address 0 1 0 0 0 0 ADDR R/W
 
 #define TCA6408A_DEFAULT_ADDRESS        0x40
 #define TCA6408A_ALT_DEFAULT_ADDRESS    0x42
@@ -80,8 +92,80 @@ void E75_Reg(uint8_t RegAddr,uint8_t RegValue)
 	SoftI2c.writes(E75_pca6408a.pins,1,E75_pca6408a.devAddress,RegAddr,&reg_data,1);
 }
 
-MSH_CMD_EXPORT(E75_Reg, set the output channel status);
-FINSH_FUNCTION_EXPORT(E75_Reg,...);
+int TCA6408A(int argc, char **argv)
+{
+	int result = REPLY_OK;
+	static uint8_t TCA6408A_inited=0;
+
+	if(TCA6408A_inited==0)
+	{
+		TCA6408A_inited=1;
+		E75_pca6408a.pins.scl_pin=PC_0;E75_pca6408a.pins.sda_pin=PC_3;//DEV5;
+		SoftI2c.pin_init(E75_pca6408a.pins);
+	}	
+	if(argc == 1 )  							
+	{	
+		rt_kprintf("TCA6408A usage: \n");
+		rt_kprintf("TCA6408A WriteReg <1~3> <reg_val>\n");	
+		rt_kprintf("TCA6408A ReadReg <0~3>\n");		
+	}
+	if(argc == 4 )  							
+	{	
+		if(!strcmp(argv[1], "WriteReg"))
+		{
+			uint8_t TCA6408A_RegAddr=atoi(argv[2]);
+			uint8_t TCA6408A_RegValue=atoi(argv[3]);
+			SoftI2c.writes(E75_pca6408a.pins,1,E75_pca6408a.devAddress,TCA6408A_RegAddr,&TCA6408A_RegValue,1);
+
+		}
+	}
+}
+//TCA6408A WriteReg 3 4 设置相关IO为输出口
+//TCA6408A WriteReg 1 0 选择E75 PORT0
+//TCA6408A WriteReg 1 1 选择E75 PORT1
+//TCA6408A WriteReg 1 2 选择E75 PORT0 AND PORT1
+//TCA6408A WriteReg 1 2 选择E75 PORT0 AND PORT1
+
+//INC_E75_SWITCHER-02  默认继电器不工作 选择PORT0
+int e75_switcher(int argc, char **argv)
+{
+	int result = REPLY_OK;
+	static uint8_t TCA6408A_inited=0;
+
+	u8 reg_data;
+	
+	if(TCA6408A_inited==0)
+	{
+		TCA6408A_inited=1;
+		
+		E75_pca6408a.pins.scl_pin=PC_0;E75_pca6408a.pins.sda_pin=PC_3;//DEV5;
+		
+		SoftI2c.pin_init(E75_pca6408a.pins);
+		
+		reg_data=4;
+		//OUTPUT:	PORT_SELA| PORT_SELB| DUT_CONNECT
+		SoftI2c.writes(E75_pca6408a.pins,1,E75_pca6408a.devAddress,3,&reg_data,1);
+	}	
+	if(argc == 1 )  							
+	{	
+		rt_kprintf("e75_switcher usage: \n");
+		rt_kprintf("e75_switcher csPort <0|2>\n");	
+	}
+	if(argc == 3 )  							
+	{	
+		if(!strcmp(argv[1], "csPort"))
+		{
+			uint8_t TCA6408A_RegValue=atoi(argv[2]);
+			SoftI2c.writes(E75_pca6408a.pins,1,E75_pca6408a.devAddress,1,&TCA6408A_RegValue,1);
+
+		}
+	}
+	return result;
+}
+
+
+MSH_CMD_EXPORT(e75_switcher, E75 Switcher Relay controller);
+FINSH_FUNCTION_EXPORT(e75_switcher,...);
 
 
 #if 0

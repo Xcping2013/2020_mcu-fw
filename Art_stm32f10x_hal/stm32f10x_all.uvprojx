@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER, RT_USING_ARM_LIBC, STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>.;rt-thread\include;applications;board;board\CubeMX_Config\Inc;board\ports;libraries\HAL_Drivers;libraries\HAL_Drivers\config;rt-thread\libcpu\arm\common;rt-thread\libcpu\arm\cortex-m3;rt-thread\components\drivers\include;rt-thread\components\finsh;rt-thread\components\libc\compilers\armlibc;rt-thread\components\libc\compilers\common;libraries\STM32F1xx_HAL\CMSIS\Device\ST\STM32F1xx\Include;libraries\STM32F1xx_HAL\STM32F1xx_HAL_Driver\Inc;libraries\STM32F1xx_HAL\CMSIS\Include;..\rtt_user_manage;..\Drivers\bsp_mcu;..\Drivers\eeprom\at24cxx;.\board\inc_mbkbcn1;..\Drivers\Analog-to-Digital Converter\mcp3421;..\Drivers\gpio expansion\pca95xx;..\Drivers\motor controller\tmc429;..\Drivers\led_drivers\tlc5973;..\Drivers\light senosr\isl29125 rgb;.\board\inc_mbtmc429;..\Drivers\Analog-to-Digital Converter\ads1220;..\Drivers\Analog-to-Digital Converter\dmm;..\Drivers\Analog-to-Digital Converter\ad7124;.\board\INC-MBAD7124-DMM;.\board\inc_fbtmc429_idc16_rs485;.\board\cmds_dut_dummy;.\board\inc_projects</IncludePath>
+              <IncludePath>.;rt-thread\include;applications;board;board\CubeMX_Config\Inc;board\ports;libraries\HAL_Drivers;libraries\HAL_Drivers\config;rt-thread\libcpu\arm\common;rt-thread\libcpu\arm\cortex-m3;rt-thread\components\drivers\include;rt-thread\components\finsh;rt-thread\components\libc\compilers\armlibc;rt-thread\components\libc\compilers\common;libraries\STM32F1xx_HAL\CMSIS\Device\ST\STM32F1xx\Include;libraries\STM32F1xx_HAL\STM32F1xx_HAL_Driver\Inc;libraries\STM32F1xx_HAL\CMSIS\Include;..\rtt_user_manage;..\Drivers\bsp_mcu;..\Drivers\eeprom\at24cxx;.\board\inc_mbkbcn1;..\Drivers\Analog-to-Digital Converter\mcp3421;..\Drivers\gpio expansion\pca95xx;..\Drivers\motor controller\tmc429;..\Drivers\led_drivers\tlc5973;..\Drivers\light senosr\isl29125 rgb;.\board\inc_mbtmc429;..\Drivers\Analog-to-Digital Converter\ads1220;..\Drivers\Analog-to-Digital Converter\dmm;..\Drivers\Analog-to-Digital Converter\ad7124;.\board\INC-MBAD7124-DMM;.\board\inc_fbtmc429_idc16_rs485;.\board\cmds_dut_dummy;.\board\inc_projects;.\board\inc_mb1616dev6</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1563,7 +1563,7 @@
                   <RVCTZI>0</RVCTZI>
                   <RVCTOtherData>0</RVCTOtherData>
                   <ModuleSelection>0</ModuleSelection>
-                  <IncludeInBuild>0</IncludeInBuild>
+                  <IncludeInBuild>1</IncludeInBuild>
                   <AlwaysBuild>2</AlwaysBuild>
                   <GenerateAssemblyFile>2</GenerateAssemblyFile>
                   <AssembleAssemblyFile>2</AssembleAssemblyFile>
@@ -2258,7 +2258,7 @@
               <RVCTZI>0</RVCTZI>
               <RVCTOtherData>0</RVCTOtherData>
               <ModuleSelection>0</ModuleSelection>
-              <IncludeInBuild>0</IncludeInBuild>
+              <IncludeInBuild>1</IncludeInBuild>
               <AlwaysBuild>2</AlwaysBuild>
               <GenerateAssemblyFile>2</GenerateAssemblyFile>
               <AssembleAssemblyFile>2</AssembleAssemblyFile>
@@ -2464,7 +2464,7 @@
               <RVCTZI>0</RVCTZI>
               <RVCTOtherData>0</RVCTOtherData>
               <ModuleSelection>0</ModuleSelection>
-              <IncludeInBuild>1</IncludeInBuild>
+              <IncludeInBuild>0</IncludeInBuild>
               <AlwaysBuild>2</AlwaysBuild>
               <GenerateAssemblyFile>2</GenerateAssemblyFile>
               <AssembleAssemblyFile>2</AssembleAssemblyFile>
@@ -3082,7 +3082,7 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>commands_for_debug</GroupName>
+          <GroupName>Debug For other moduel</GroupName>
           <GroupOption>
             <CommonProperty>
               <UseCPPCompiler>0</UseCPPCompiler>
@@ -3660,6 +3660,11 @@
               <FileName>readme.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\board\readme.c</FilePath>
+            </File>
+            <File>
+              <FileName>changeList.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\board\changeList.c</FilePath>
             </File>
           </Files>
         </Group>

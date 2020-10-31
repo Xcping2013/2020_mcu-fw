@@ -408,7 +408,152 @@ void LID_OPEN_AppRun(void )
 #endif
 
 /* -----------------------------------------------------------------------*/
+/* -------------------ATLAS-QT1-----------------------------------------
 
+***************************************************************************/
+#if 1
+
+//IN1 上料正面传感器			OUT7 	P1-DOWN气缸伸出		OUT15 X气缸伸出
+//IN2 上料侧面传感器			OUT8 	P1-DOWN气缸缩回	  OUT16 X气缸缩回
+//IN3 下料正面传感器			OUT9 	P2-DOWN气缸伸出	
+//IN4 下料侧面传感器			OUT10 P2-DOWN气缸缩回
+//												OUT11 P3-DOWN气缸伸出
+//                        OUT12 P3-DOWN气缸缩回
+//IN12 出料光纤检测
+//上面5个sensor，只要一个感应到了，就停止X轴的输出
+//第2点： 检测盖子sensor（IN5）感应到了，OUT7~OUT12 停止输出。 恢复到未检测状态时，OUT7~OUT12 恢复之前的输出状态
+//这些都加上使能开关
+#define CylinderX_GoRight()			outputSet(15,1);	outputSet(16,0)
+#define CylinderX_Stop()				outputSet(15,0);	outputSet(16,0)
+#define CylinderX_GoLeft()			outputSet(15,0);	outputSet(16,1)
+
+#define CylinderP1_GoUp()				outputSet(7,1);	outputSet(8,0)
+#define CylinderP1_Stop()     	outputSet(7,0);	outputSet(8,0)
+#define CylinderP1_GoDown()     outputSet(7,0);	outputSet(8,1)
+
+#define CylinderP2_GoUp()				outputSet(9,1);	outputSet(10,0)
+#define CylinderP2_Stop()    		outputSet(9,0);	outputSet(10,1)
+#define CylinderP2_GoDown()     outputSet(9,0);	outputSet(10,1)
+
+#define CylinderP3_GoUp()				outputSet(11,1);	outputSet(12,0)
+#define CylinderP3_Stop()				outputSet(11,0);	outputSet(12,0)
+#define CylinderP3_GoDown()     outputSet(11,0);	outputSet(12,1)
+
+uint8_t OutStaus[8]={0,0,0,0,0,0,0,0};
+
+uint8_t CylinderX_App_EN=0;
+uint8_t LidDet_App_EN=0;
+
+void GetOutputs_Status(void)
+{
+	OutStaus[0]=outputGet(7);		OutStaus[1]=outputGet(8);		OutStaus[2]=outputGet(9);		OutStaus[3]=outputGet(10);
+	OutStaus[4]=outputGet(11);	OutStaus[5]=outputGet(12);	OutStaus[6]=outputGet(15);	OutStaus[7]=outputGet(16);
+	
+}
+void CylinderX_App(void)
+{
+	GetOutputs_Status();
+	
+}
+void ATLAS_QT1_init(void )
+{
+		
+
+}
+int appRun(int argc, char **argv)
+{
+	//appRun safe_sensor en|disable
+	//appRun lid_sensor en|disable
+}
+
+void ATLAS_QT1_AppRun(void )
+{		
+    while (1)
+    {
+			static	uint8_t	Safe_detected_cnt=0;
+			
+			static	uint8_t	Lid_detected_cnt=0;
+			
+			static uint8_t CylinderX_AppLock=0;
+			
+			static uint8_t LidDet_AppLock=0;
+			
+			if(CylinderX_App_EN==1)
+			{
+				GetOutputs_Status();
+				if( (inputGet(1)==0	|| inputGet(2)==0 || inputGet(3)==0 || inputGet(4)==0 || inputGet(12)==0)	)
+				{
+					if(CylinderX_AppLock==0)
+					{
+						Safe_detected_cnt++;
+						if( Safe_detected_cnt>3 )
+						{				
+							CylinderX_Stop();
+							CylinderX_AppLock=1;
+						}
+					}
+				}
+				else 					
+				{
+					if(CylinderX_AppLock==1)
+					{
+						Safe_detected_cnt++;
+						if(Safe_detected_cnt>20)	
+						{
+							Safe_detected_cnt=0;
+							CylinderX_AppLock=0;
+							outputSet(15,OutStaus[6]);	outputSet(16,OutStaus[7]);					
+						}
+					}
+					else 
+					{
+						Safe_detected_cnt=0;
+					}
+				}
+				rt_thread_delay(5);
+			}				
+			else rt_thread_delay(100);
+
+			if(LidDet_App_EN==1)
+			{
+				GetOutputs_Status();
+				if( inputGet(5)==0)
+				{
+					if(LidDet_AppLock==0)
+					{
+						Lid_detected_cnt++;
+						if( Lid_detected_cnt>3 )
+						{				
+							CylinderP1_Stop();CylinderP2_Stop();CylinderP3_Stop();
+							LidDet_AppLock=1;
+						}
+					}
+				}
+				else 					
+				{
+					if(LidDet_AppLock==1)
+					{
+						Lid_detected_cnt++;
+						if(Lid_detected_cnt>20)	
+						{
+							Lid_detected_cnt=0;
+							LidDet_AppLock=0;
+							outputSet(7,OutStaus[0]);	outputSet(8,OutStaus[1]);			
+							outputSet(9,OutStaus[2]);	outputSet(10,OutStaus[3]);		
+							outputSet(11,OutStaus[4]);	outputSet(12,OutStaus[5]);		
+						}
+					}
+					else 
+					{
+						Lid_detected_cnt=0;
+					}
+				}
+				rt_thread_delay(5);
+			}				
+			else rt_thread_delay(100);			
+	}
+}
+#endif
 
 
 /* -----------------------------------------------------------------------*/
@@ -420,16 +565,16 @@ void printProjectID(void)
 {
 	switch(WhichProject)
 	{		
-		case BUTTON_ONLINE: 	rt_kprintf("ProjectID	BUTTON-ONLINE\n");	
+		case BUTTON_ONLINE: 	rt_kprintf("ProjectID [BUTTON-ONLINE]\n");	
 			break;
 
-		case BUTTON_OFFLINE: 	rt_kprintf("ProjectID	BUTTON-OFFLINE\n");	
+		case BUTTON_OFFLINE: 	rt_kprintf("ProjectID [BUTTON-OFFLINE]\n");	
 			break;
 
-		case LID_OPEN: 				rt_kprintf("ProjectID	LID-OPEN\n");	
+		case LID_OPEN: 				rt_kprintf("ProjectID [LID-OPEN]\n");	
 			break;
 
-		case COMMON_USE: 				rt_kprintf("ProjectID	COMMON-USE\n");	
+		case COMMON_USE: 			rt_kprintf("ProjectID [COMMON-USE]\n");	
 			break;
 		
 		default: 
@@ -461,6 +606,8 @@ void ProjectAppInit(void)
 			case LID_OPEN: LID_OPEN_init();		
 				break;
 
+			case ATLAS_QT1: ATLAS_QT1_init();		
+				break;
 			
 			default: 
 				break;
@@ -500,7 +647,10 @@ static void ProjectAppThread_entry(void *parameter)
 		
 		case NMEI_IN3COLA: NMEI_IN3COLA_AppRun(); 
 			break;
-				
+
+		case ATLAS_QT1: ATLAS_QT1_AppRun(); 
+			break;
+		
 		default: rt_thread_delay(100);
 			break;
 	}
@@ -525,16 +675,17 @@ int ProjectAppThreadInit(void)
 }
 /* CMDS:	ProjectID [ProjectID]
 */
-int ProjectID(int argc, char **argv)
+int project(int argc, char **argv)
 {
 	int result = RT_ERROR;
 	
 	if (argc == 1 )	
 	{
 		rt_kprintf("usage: \n");
-		rt_kprintf("ProjectID       ---get current project id\n");
-		rt_kprintf("ProjectID ID    ---set project id, and load app run for project\n");
-		rt_kprintf("The following are the available ID:\n");
+		rt_kprintf("project get       ---Get current project name\n");
+		rt_kprintf("project select    ---Select to run related project applications\n");
+		
+		rt_kprintf("\nThe following are the available project name:\n");
 		rt_kprintf("-----------------------------------------------------------------\n");		
 //		rt_kprintf("NMEI-IN3COLA\n");
 //		rt_kprintf("NMEI-IN3VEGE\n");
@@ -546,29 +697,36 @@ int ProjectID(int argc, char **argv)
 	}
 	else if (argc == 2 )	
 	{
-		if (!strcmp(argv[1], "Get"))	
+		if (!strcmp(argv[1], "get"))	
 		{
-			printProjectID();
+			printProjectID();result=RT_EOK;
 		}
+	}
+	else if (argc == 3 )	
+	{
 		
-		else if (!strcmp(argv[1], "NMEI-IN3COLA"))	{		WhichProject=NMEI_IN3COLA;	result=RT_EOK;}
-		else if (!strcmp(argv[1], "NMEI-IN3VEGE"))	{		WhichProject=NMEI_IN3VEGE;	result=RT_EOK;}
-		else if (!strcmp(argv[1], "COMMON-USE"))		{		WhichProject=COMMON_USE;		result=RT_EOK;}
-		
-		else if (!strcmp(argv[1], "LID-OPEN"))			{		WhichProject=LID_OPEN;			result=RT_EOK;}
-		else if (!strcmp(argv[1], "BUTTON-ONLINE"))	{		WhichProject=BUTTON_ONLINE;	result=RT_EOK;}
-		else if (!strcmp(argv[1], "BUTTON-OFFLINE")){		WhichProject=BUTTON_OFFLINE;result=RT_EOK;}
-		
-		if(result==RT_EOK)
+		if (!strcmp(argv[1], "select"))	
 		{
-			at24cxx.write(at24c256 , EEPROM_APP_CS_ADDR, &WhichProject, 1);					
-			rt_kprintf("control board is resetting to load and run project app......\n");
-			cpu_reset();
+			if (!strcmp(argv[2], "NMEI-IN3COLA"))	{		WhichProject=NMEI_IN3COLA;	result=RT_EOK;}
+			else if (!strcmp(argv[2], "NMEI-IN3VEGE"))	{		WhichProject=NMEI_IN3VEGE;	result=RT_EOK;}
+			else if (!strcmp(argv[2], "COMMON-USE"))		{		WhichProject=COMMON_USE;		result=RT_EOK;}
+			
+			else if (!strcmp(argv[2], "LID-OPEN"))			{		WhichProject=LID_OPEN;			result=RT_EOK;}
+			else if (!strcmp(argv[2], "BUTTON-ONLINE"))	{		WhichProject=BUTTON_ONLINE;	result=RT_EOK;}
+			else if (!strcmp(argv[2], "BUTTON-OFFLINE")){		WhichProject=BUTTON_OFFLINE;result=RT_EOK;}
+			else if (!strcmp(argv[2], "ATLAS-QT1"))			{		WhichProject=ATLAS_QT1;result=RT_EOK;}
+			
+			if(result==RT_EOK)
+			{
+				at24cxx.write(at24c256 , EEPROM_APP_CS_ADDR, &WhichProject, 1);					
+				rt_kprintf("control board is resetting to load and run project app......\n");
+				cpu_reset();
+			}
 		}
 	}
 	return result;
 }
-MSH_CMD_EXPORT(ProjectID, get project id board used or set project id to run app);
+MSH_CMD_EXPORT(project, Get or Select to run related project applications);
 /* -----------------------------------------------------------------------
 motion reset
  -----------------------------------------------------------------------*/

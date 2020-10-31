@@ -17,6 +17,8 @@ enum ProjectApps
 
 	COMMON_USE,
 	
+	ATLAS_QT1,
+	
 };
 
 extern uint8_t WhichProject;

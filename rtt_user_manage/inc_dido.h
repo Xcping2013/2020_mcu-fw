@@ -17,4 +17,6 @@ extern void dido_hw_init(void);
 extern uint8_t inputGet(uint8_t channel);
 extern void    outputSet(uint8_t channel, uint8_t setval);
 
+extern uint8_t    outputGet(uint8_t channel);
+
 #endif

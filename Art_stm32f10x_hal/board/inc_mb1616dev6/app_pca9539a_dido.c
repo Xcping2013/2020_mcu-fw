@@ -203,7 +203,7 @@ int readinputs(void)
 {
 		SoftI2c.reads(pca9539a_1.pins,1,pca9539a_1.devAddress,0, &pca9539a_1.in_data ,1);	
 		SoftI2c.reads(pca9539a_2.pins,1,pca9539a_2.devAddress,0, &pca9539a_2.in_data ,1);
-		if(pca9539a_is_inited>=3)
+//		if(pca9539a_is_inited>=3)
 		{			
 			SoftI2c.reads(pca9539a_3.pins,1,pca9539a_3.devAddress,0, &pca9539a_3.in_data ,1);	
 			SoftI2c.reads(pca9539a_4.pins,1,pca9539a_4.devAddress,0, &pca9539a_4.in_data ,1);	
@@ -270,6 +270,18 @@ uint8_t data_invert_order(uint8_t data)
 	return out_data;
 }
 
+uint8_t    outputGet(uint8_t channel)
+{
+		if(0<channel && channel< 31)
+		{
+			if(channel<9) 		  return 	(pca9539a_1.out_data & (1 << (channel-1))?  1:0);
+			else if(channel<17) return	(pca9539a_2.out_data & (1 << (16-channel))? 1:0);
+			else if(channel<25) return	(pca9539a_3.out_data & (1 << (24-channel))? 1:0);
+			else if(channel<32) return	(pca9539a_4.out_data & (1 << (channel-31))? 1:0);
+		}
+		return 0;
+	
+}
 int readoutput(int argc, char **argv)
 {
     if (argc == 1)
@@ -578,11 +590,11 @@ static void writepin(uint8_t indx, uint8_t status)
 	rt_kprintf("+ok@output.writepin(0x%08x)\n",(pca9539a_4.out_data)<<24 | data_invert_order(pca9539a_3.out_data)<<16 | data_invert_order(pca9539a_2.out_data)<<8 | pca9539a_1.out_data);	
 }
 /****************************MSH_CMD_EXPORT*****************FINSH_FUNCTION_EXPORT*******************************************/
-MSH_CMD_EXPORT(readinput, read the state of the input channel);
-MSH_CMD_EXPORT(readinputs, read the state of the input channels);
-//MSH_CMD_EXPORT(readoutput, read the state of the output channel);
-//MSH_CMD_EXPORT(readoutputs, read the state of the output channels);
-MSH_CMD_EXPORT(output, set the output channel status);
+MSH_CMD_EXPORT(readinput, Read the status of one or more inputs);
+MSH_CMD_EXPORT(readinputs, Read the status of all inputs);
+MSH_CMD_EXPORT(readoutput,  Read the status of one or more outputs);
+MSH_CMD_EXPORT(readoutputs, Read the status of all outputs);
+MSH_CMD_EXPORT(output, Set single or multiple output on|off);
 
 FINSH_FUNCTION_EXPORT(readpin,...);
 FINSH_FUNCTION_EXPORT(writepin,...);

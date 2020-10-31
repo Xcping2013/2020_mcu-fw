@@ -329,7 +329,7 @@ int light_sensosr_thread_init(void)
 }
 //INIT_APP_EXPORT(isl29125_devs_hw_init);
 //INIT_APP_EXPORT(light_sensosr_thread_init);
-MSH_CMD_EXPORT(lightSensor,Readwrite the sensor);
+MSH_CMD_EXPORT(lightSensor,Read data from the RGB sensor);
 
 
 

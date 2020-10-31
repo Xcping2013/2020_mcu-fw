@@ -64,24 +64,25 @@ int mb1616dev6_hw_init(void)
 {		
 	//board.c	rcc_set
 	
-	rt_kprintf("\nFW-MB1616dDEV6 %s ROM[%dK] RAM[%dK] build at %s %s\n\n", version_string,STM32_FLASH_SIZE/1024, STM32_SRAM_SIZE,  __TIME__, __DATE__);
+	rt_kprintf("\nFW-RTT-MB1616dDEV6 %s ROM[%dK] RAM[%dK] build at %s %s\n\n", version_string,STM32_FLASH_SIZE/1024, STM32_SRAM_SIZE,  __TIME__, __DATE__);
 	
 	//cube_hal_inits();	
 	
 	delay_ms(10);
-		
+	
 	at24cxx_hw_init();
 	
 	dido_hw_init();
 		
 	tmc429_hw_init();
 
+	rt_kprintf("controller init......[ok]\n");
+	rt_kprintf("------------------------------------------------------------------\n");
+	
 	ProjectAppInit();
 	
-	rt_kprintf("controller init......[ok]\n");
-	rt_kprintf("-------------------------------\n");
-	rt_kprintf("you can type help to list commands and all commands should end with \\r\\n\n");
-	rt_kprintf("-------------------------------\n>>");
+	rt_kprintf("\nyou can type help to list commands and all commands should end with \\r\\n\n");
+	rt_kprintf("------------------------------------------------------------------\n>>");
   return 0;
 }
 //
@@ -141,7 +142,7 @@ static void board_debug_thread_entry(void *parameter)
     while (1)
     {
 			input_trigger_output();	    
-      rt_thread_delay(50);
+      rt_thread_delay(10);
     }
 }
 static rt_thread_t tid1 = RT_NULL;
@@ -173,7 +174,7 @@ void board_debug(void)
 	}
 }
 /****************************MSH_CMD_EXPORT*****************FINSH_FUNCTION_EXPORT*******************************************/
-MSH_CMD_EXPORT(board_debug, Board function test);
+MSH_CMD_EXPORT(board_debug, Eeprom and IO test);
 FINSH_FUNCTION_EXPORT(board_debug,...);
 
 #endif
