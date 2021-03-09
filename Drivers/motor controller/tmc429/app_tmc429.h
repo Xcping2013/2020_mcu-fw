@@ -4,6 +4,7 @@
 
 #include "tmc429.h"
 
+extern  uint8_t tmc429_inited;
 void tmc429_hw_init(void);
 
 extern uint8_t getTMC429_DEV(uint8_t motor_number);

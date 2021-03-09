@@ -1,28 +1,41 @@
 
-#include "app_gpio_dido.h"	
-#include "app_eeprom_24xx.h"
+
 
 #include "tmc429_motion_cmd.h"
-#include "user_msh.h"	
+#include "inc_msh.h"	
 
-#if 0
-#define printf rt_kprintf
-#endif
 
-//char version_string[]="ver3.6.1";
+#include "bsp_unity.h"	
 
-void user_show_version(void)
+#include "user_commands.h"	
+
+#include "inc_dido.h"
+
+#include "inc_mb1616dev6.h"
+#include "dido_pca95xx.h"
+
+#include "app_eeprom_24xx.h"
+
+
+static void PrintCommandlist_User(void);
+static void	PrintCommandlist(void);
+
+
+/*UserMsh_Commands 
+
+1. 先把命令小写后缓存到数组user_lowcase[1000] 中, 并加入结束符
+2. 匹配Command_analysis_function命令则返回,否则继续对原始缓存命令进行msh_exe
+3. 如果是help命令 Command_analysis和msh 都处理
+
+4. 后续Ver01和Ver02命令可以依靠自动识别 进行自保存和调用
+
+*/
+char UserCommands[FINSH_CMD_SIZE+20]={0};	//shell->line_position <= FINSH_CMD_SIZE;
+
+static void PrintCommandlist_User(void)
 {
-	rt_show_version();
-
-	rt_kprintf("\nFW-MB1616dDEV6-RTT-%d-%d %s build at %s %s\n\n", STM32_FLASH_SIZE/1024, STM32_SRAM_SIZE, version_string, __TIME__, __DATE__);
-
-}
-static void PrintCommandlist_older(void)
-{
-//	rt_kprintf("ver1 commands:\n");
-	rt_kprintf("sv-------------------get software version\n");
-	rt_kprintf("hv-------------------get hardware version\n");
+//	rt_kprintf("sv-------------------get software version\n");
+//	rt_kprintf("hv-------------------get hardware version\n");
 	rt_kprintf("fsn------------------get fixture serial number\n");	
 	rt_kprintf("fsn[]----------------set fixture serial number\n");	
 	rt_kprintf("rom[]----------------read roms\n");
@@ -31,34 +44,13 @@ static void PrintCommandlist_older(void)
 	rt_kprintf("read info xx---------read datas\n");
 	rt_kprintf("int[]----------------get the input status\n");
 	rt_kprintf("out[][]--------------set the output status\n");
-	
-	rt_kprintf("ParamSave ProjectType OKOA\n");		
-	rt_kprintf("ParamSave ProjectType OKOA_LED\n");	
-//	rt_kprintf("ParamSave ProjectType BX88\n");
 	rt_kprintf("\n");
-//	rt_kprintf("type[os]\n");
-//	rt_kprintf("type[bqt1]\n");
-//	rt_kprintf("type[heat]\n");
-	
-//	rt_kprintf("Please send command as above end with \\r\\n\n");
-}
-static void	Printhelplist(void)
-{
-	
-	rt_kprintf("    gpio help:\n");
-	rt_kprintf("    button help:\n");
-	rt_kprintf("    eeprom help:\n");
-	rt_kprintf("    uart3 help:\n");
-	
-	rt_kprintf("    motor help:\n");
-	rt_kprintf("    motor get help:\n");
-	rt_kprintf("    motor set help:\n");	
 }
 static void	PrintCommandlist(void)
 {
-		//和MSH统一
-		PrintCommandlist_older();	
-//		rt_kprintf("ver2 commands:\n");
+		//Ver01 
+		PrintCommandlist_User();	
+		//Ver02
 		rt_kprintf("reboot                 - Reboot systerm\n");
 	  rt_kprintf("version                - Show firmware version information\n");
 		rt_kprintf("command_Fset           - Back to first set of commands\n");
@@ -79,52 +71,34 @@ static void	PrintCommandlist(void)
 		rt_kprintf("    var2:data\n");
 	
 		rt_kprintf("\n");
-//	  rt_kprintf("\ncommands help\n");
-//		Printhelplist();
+
 }
 
-uint8_t  ProcessCommand(char  *string)
+uint8_t  Command_analysis_User(char *string)
 {
-	uint8_t result = REPLY_OK;
-		
-	if(!strcmp("help",string))	
-	{
-		rt_kprintf("\n");
-		
-		PrintCommandlist();
-		
-	}
-	else if(!Command_analysis_dido(string))						{;}
-////	else if(!Command_analysis_button(string))			{;}
-////	else 
-	else if(!Command_analysis_eeprom(string))			{;}
-	//else if(!Command_analysis_uart3(string))			{;}
 	
-	else if(!Command_analysis_motor(string))			{;}
-	else if(!Command_analysis_motor_get(string))	{;}
-	else if(!Command_analysis_motor_set(string))	{;}
-		
-	else if(!strcmp("version",string))
-	{
-		user_show_version();
-	}
-	else if(!strcmp("reboot",string))
-	{
-		rt_kprintf("\n");
-		SCB_AIRCR = SCB_RESET_VALUE;		
-	}
-	else if(!strcmp("command_Fset",string))
-	{
-		rt_kprintf("\n");
-		cmd_mshMode_enter();
-	}
-	else if(!strcmp("board_debug",string))
-	{
-		rt_kprintf("\n");
-		board_debug();
-	}
-	else result = REPLY_CHKERR;
-	return result;
+#if 0		
+	if(!strcmp("help",string))	{	rt_kprintf("\n");	PrintCommandlist();	}	//  user help		hide prevent mixup	
+#endif 
+	
+	if(!strcmp("version",string))	{	user_show_version();	return REPLY_OK;}	
+
+	if(Command_analysis_eeprom(string)==REPLY_OK)					{return REPLY_OK;}	
+	if(Command_analysis_dido(string)==REPLY_OK)						{return REPLY_OK;}
+	if(Command_analysis_eeprom(string)==REPLY_OK)					{return REPLY_OK;}
+	
+	//else if(!Command_analysis_button(string))			{return REPLY_OK;}
+	//else if(!Command_analysis_uart3(string))			{return REPLY_OK;}
+	
+//	else if(!Command_analysis_motor(string))			{return REPLY_OK;}
+//	else if(!Command_analysis_motor_get(string))	{return REPLY_OK;}
+//	else if(!Command_analysis_motor_set(string))	{return REPLY_OK;}
+//	else if(!strcmp("board_debug",string))
+//	{
+//		rt_kprintf("\n");
+//		board_debug();
+//	}
+	return REPLY_CHKERR;
 }
 
 /*********************************************************************************************************/

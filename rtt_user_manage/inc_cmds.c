@@ -9,6 +9,12 @@
 
 #include "app_eeprom_24xx.h"
 
+
+#include "bsp_unity.h"
+
+#include "user_commands.h"	
+
+
 uint8_t  cmds_lower_flag=0;
 uint8_t  cmdtype=0;
 
@@ -18,7 +24,18 @@ uint8_t cmds_lowercase(void)
 }
 int UserMsh_Commands(char *cmd, rt_size_t length)
 {	
-#if 0
+	
+#if 1
+	
+	memset(UserCommands, 0, sizeof(UserCommands));
+	
+	MakeLowercaseTo(cmd,&UserCommands[0]);
+	
+	if(Command_analysis_User(&UserCommands[0])==REPLY_OK) 
+	{	
+		return 0;
+	}	
+	
 	if(at24cxx_msh(cmd)==REPLY_OK) 
 	{
 		return 0;

@@ -19,4 +19,7 @@ extern void    outputSet(uint8_t channel, uint8_t setval);
 
 extern uint8_t    outputGet(uint8_t channel);
 
+extern uint8_t Command_analysis_dido(char *string);
+
+
 #endif

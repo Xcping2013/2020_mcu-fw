@@ -3,7 +3,12 @@
 
 #include "bsp_mcu_delay.h"	
 #include "bsp_mcu_gpio.h"
+
 #include "inc_dido.h"
+
+#include "fbio0808.h"	
+#include "FBJFFB1615CN1.h"	
+#include "fbholyrelay.h"
 
 #include "app_eeprom_24xx.h"
 #include "app_tmc429.h"	
@@ -18,6 +23,9 @@
 /* -----------------------------------------------------------------------*/
 uint8_t ProjectUsed='N';
 uint8_t WhichProject=COMMON_USE;
+
+uint8_t IDC_DEV[6]={FBIO0808,FBTMC429,FB29125,FB29125,NONE,NONE};
+
 /* -----------------------------------------------------------------------*/
 int ProjectAppThreadInit(void);
 
@@ -86,14 +94,6 @@ void NMEI_IN3COLA_init(void )
 }
 #endif
 /* -----------------------------------------------------------------------*/
-#if 1
-void NMEI_IN3VEGE_init(void )
-{
-	
-	
-}
-
-#endif
 
 
 /* -----------------------------------------------------------------------*/
@@ -105,11 +105,7 @@ void NMEI_IN3VEGE_init(void )
 #if 1
 void BUTTON_ONLINE_init(void )
 {
-	motorSetting.limit_level_valid=1;          
-	motorSetting.orgin_level_valid=0;  
-	OriginSensorON[0]=LOW;	OriginSensorON[1]=LOW;	OriginSensorON[2]=LOW;
-	OriginSensorON[3]=LOW;	OriginSensorON[4]=LOW;	OriginSensorON[5]=LOW;	
-	
+
 }
 //inputGet(2) - RESET
 void BUTTON_ONLINE_AppRun(void )
@@ -206,6 +202,10 @@ void BUTTON_OFFLINE_init(void )
 
 }
 void BUTTON_OFFLINE_AppRun(void )
+{
+	
+}
+void BUTTON_OFFLINE_AppRun1(void )
 {
 		uint8_t	in2_RESET_detected_cnt=0;
 		
@@ -356,11 +356,6 @@ void KeyS_act_LIDOPEN(void)
 
 void LID_OPEN_init(void )
 {
-	motorSetting.limit_level_valid=0;          
-	motorSetting.orgin_level_valid=0;  
-	OriginSensorON[0]=LOW;	OriginSensorON[1]=LOW;	OriginSensorON[2]=LOW;
-	OriginSensorON[3]=LOW;	OriginSensorON[4]=LOW;	OriginSensorON[5]=LOW;	
-
 	
 
 }
@@ -457,7 +452,7 @@ void CylinderX_App(void)
 }
 void ATLAS_QT1_init(void )
 {
-		
+	IDC_DEV_Init(0,FBJFFB1615CN1);	
 
 }
 int appRun(int argc, char **argv)
@@ -557,10 +552,69 @@ void ATLAS_QT1_AppRun(void )
 
 
 /* -----------------------------------------------------------------------*/
+/* -------------------B495-QT1-----------------------------------------
 
+***************************************************************************/
+#if 1
 
+void B495_QT1_init(void)
+{
+	IDC_DEV_Init(0,FBIO0808);
+	IDC_DEV_Init(1,FBHOLYRELAY);	
+}
+void B494_B495_Click_ratio_init(void)
+{
+	
+	motorSetting.limit_level_valid=1;          
+	motorSetting.orgin_level_valid=0; 
+	
+	OriginSensorON[0]=HIGH;	OriginSensorON[1]=HIGH;	OriginSensorON[2]=HIGH;
+	OriginSensorON[3]=LOW;	OriginSensorON[4]=LOW;	OriginSensorON[5]=LOW;	
+	
+	IDC_DEV_Init(0,FBTMC429);
+	
+}
+//
+#endif
+
+/* -------------------COMMON_USE-----------------------------------------
+
+***************************************************************************/
+#if 1
+
+void COMMON_USE_init(void)
+{
+//	IDC_DEV_Init(0,FBTMC429);
+//	IDC_DEV_Init(1,FBTMC429);	
+}
+//
+#endif
 
 /* -----------------------------------------------------------------------*/
+
+void IDC_DEV_Init(uint8_t whichDev, uint8_t devType)
+{
+	if(	whichDev < 6)
+	{
+		IDC_DEV[whichDev] = devType;
+	}
+	switch(devType)
+	{
+		case FBIO0808:					FBIO0808_Init();
+			break;
+		case FBJFFB1615CN1:			FBJFFB1615CN1_Init();
+			break;
+		case FBHOLYRELAY:				FBHOLYRELAY_Init();
+			break;	
+		case FBTMC429:			 		tmc429_hw_init();
+			break;			
+		default:
+			break;
+	}			
+}
+
+
+
 void printProjectID(void)
 {
 	switch(WhichProject)
@@ -574,9 +628,15 @@ void printProjectID(void)
 		case LID_OPEN: 				rt_kprintf("ProjectID [LID-OPEN]\n");	
 			break;
 
-		case COMMON_USE: 			rt_kprintf("ProjectID [COMMON-USE]\n");	
+		case COMMON_USE: 			rt_kprintf("project select : COMMON-USE\n");	
 			break;
 		
+		case ATLAS_QT1: 			rt_kprintf("project select : ATLAS-QT1\n");	
+			break;
+		case B495_QT1: 				rt_kprintf("project select : B495-QT1\n");	
+			break;
+		case CLICK_RATIO: 		rt_kprintf("project select : CLICK-RATIO\n");	
+			break;				
 		default: 
 			break;
 	}	
@@ -589,18 +649,28 @@ void ProjectAppInit(void)
 	
 	if(ProjectUsed==PROJECT_USED)
 	{
+		if(WhichProject==ATLAS_QT1)
+		{
+			IDC_DEV_Init(0,FBJFFB1615CN1);			
+		}
+		else IDC_DEV_Init(0,FBIO0808);
+		{
+//			OriginSensorON[0]=LOW;	OriginSensorON[1]=LOW;	OriginSensorON[2]=LOW;
+//			OriginSensorON[3]=LOW;	OriginSensorON[4]=LOW;	OriginSensorON[5]=LOW;	
+//	
+//			//IDC_DEV_Init(0,FBTMC429);		
+		}
+
+#if 1		
 		switch(WhichProject)
 		{
-			case NMEI_IN3COLA: NMEI_IN3COLA_init(); 	
+			case COMMON_USE: COMMON_USE_init(); 	
 				break;
-			case NMEI_IN3VEGE: NMEI_IN3VEGE_init();		
-				break;
-
-
+			
 			case BUTTON_ONLINE: BUTTON_ONLINE_init();		
 				break;
 
-			case BUTTON_OFFLINE: BUTTON_OFFLINE_init();		
+			case CLICK_RATIO: B494_B495_Click_ratio_init();		
 				break;
 
 			case LID_OPEN: LID_OPEN_init();		
@@ -609,11 +679,15 @@ void ProjectAppInit(void)
 			case ATLAS_QT1: ATLAS_QT1_init();		
 				break;
 			
+			case B495_QT1: B495_QT1_init();		
+				break;
+			
 			default: 
 				break;
 		}
+#endif
+
 		ProjectAppThreadInit();
-		
 	}
 	else
 	{
@@ -622,7 +696,7 @@ void ProjectAppInit(void)
 		WhichProject=	COMMON_USE; 
 		at24cxx.write(at24c256,EEPROM_APP_CS_ADDR,&WhichProject,1);
 	}
-	
+	rt_kprintf("\n");
 	printProjectID();
 }
 static struct rt_thread ProjectAppThread;
@@ -648,7 +722,7 @@ static void ProjectAppThread_entry(void *parameter)
 		case NMEI_IN3COLA: NMEI_IN3COLA_AppRun(); 
 			break;
 
-		case ATLAS_QT1: ATLAS_QT1_AppRun(); 
+		case ATLAS_QT1: //ATLAS_QT1_AppRun(); 
 			break;
 		
 		default: rt_thread_delay(100);
@@ -690,9 +764,11 @@ int project(int argc, char **argv)
 //		rt_kprintf("NMEI-IN3COLA\n");
 //		rt_kprintf("NMEI-IN3VEGE\n");
 		rt_kprintf("COMMON-USE\n");
-		rt_kprintf("BUTTON-ONLINE\n");
-		rt_kprintf("BUTTON-OFFLINE\n");
-		rt_kprintf("LID-OPEN\n");
+		rt_kprintf("ATLAS-QT1\n");
+		rt_kprintf("B495-QT1\n");
+		rt_kprintf("CLICK-RATIO\n");
+		
+
 		rt_kprintf("-----------------------------------------------------------------\n");	
 	}
 	else if (argc == 2 )	
@@ -707,7 +783,7 @@ int project(int argc, char **argv)
 		
 		if (!strcmp(argv[1], "select"))	
 		{
-			if (!strcmp(argv[2], "NMEI-IN3COLA"))	{		WhichProject=NMEI_IN3COLA;	result=RT_EOK;}
+			if (!strcmp(argv[2], "NMEI-IN3COLA"))				{		WhichProject=NMEI_IN3COLA;	result=RT_EOK;}
 			else if (!strcmp(argv[2], "NMEI-IN3VEGE"))	{		WhichProject=NMEI_IN3VEGE;	result=RT_EOK;}
 			else if (!strcmp(argv[2], "COMMON-USE"))		{		WhichProject=COMMON_USE;		result=RT_EOK;}
 			
@@ -715,6 +791,9 @@ int project(int argc, char **argv)
 			else if (!strcmp(argv[2], "BUTTON-ONLINE"))	{		WhichProject=BUTTON_ONLINE;	result=RT_EOK;}
 			else if (!strcmp(argv[2], "BUTTON-OFFLINE")){		WhichProject=BUTTON_OFFLINE;result=RT_EOK;}
 			else if (!strcmp(argv[2], "ATLAS-QT1"))			{		WhichProject=ATLAS_QT1;result=RT_EOK;}
+			
+			else if (!strcmp(argv[2], "B495-QT1"))			{		WhichProject=B495_QT1;result=RT_EOK;}
+			else if (!strcmp(argv[2], "CLICK-RATIO"))		{		WhichProject=CLICK_RATIO;result=RT_EOK;}
 			
 			if(result==RT_EOK)
 			{
@@ -739,7 +818,8 @@ int motion(int argc, char **argv)
 
 
 
-//
+//不发项目编号的话 发送对应的命令去加载初始化配置也OK 关于电机配置直接把通用的写在默认配置里面
+//后续可以使用板卡对应的特殊命令来配置 并把Dev所接设备保持入EEPROM
 
 
 

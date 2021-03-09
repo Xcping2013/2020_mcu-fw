@@ -77,10 +77,209 @@ void at24cxx_hw_init(void)
 	}
 	else 
 	{
-		rt_kprintf("iic device at24c128 [found]\n");
+		rt_kprintf("iic device at24c128 found\n");
 		DBG_TRACE("iic device at24c256 [found] addr=%d\n",at24c256.devAddress);
 	}	
 }
+/*******命令顺序格式一 自定义格式***********/
+#if 1		
+void printf_cmdList_eeprom(void)
+{
+	rt_kprintf("\nEEPROM Usage: \n");
+	rt_kprintf("rom[]----------------read roms\n");
+	rt_kprintf("rom[][]--------------write roms\n");
+	rt_kprintf("save info xx yyyyy---write datas\n");
+	rt_kprintf("read info xx---------read datas\n");
+	rt_kprintf("savedata: save data to page 1~%d\n",EEPROM_INFO_PAGE_LEN);
+	rt_kprintf("readdata: read data from page 1~%d\n",EEPROM_INFO_PAGE_LEN);
+}
+uint8_t  command_fsn(char *Commands)
+{
+	char fsn[64];
+	DBG_TRACE("%s\n",Commands);
+	
+	if(strcmp("fsn",		Commands)==0)			
+	{	
+		at24cxx.read(at24c256 , EEPROM_FSN_PAGE_ADDR*EEPROM_PAGE_BYTES, (uint8_t *)fsn, 64);
+		for(uint8_t i=0;i<EEPROM_PAGE_BYTES;i++)	
+		{
+			if(fsn[i]>127) { fsn[i]='\0';break;}
+		}
+//		if(!ReadPageStringFromEEPROM(EEPROM_FSN_PAGE_ADDR,fsn))
+		rt_kprintf("%s<%.64s>\n",Commands,fsn);
+		return REPLY_OK;	
+	}
+	if(	(Commands[0]=='s')	&&	(Commands[1]=='n')	&&	(Commands[2]==':')	)
+	{
+//		if(!ReadPageStringFromEEPROM(EEPROM_FSN_PAGE_ADDR,fsn))
+		at24cxx.write(at24c256, EEPROM_FSN_PAGE_ADDR*EEPROM_PAGE_BYTES, (uint8_t *) (&Commands[3]), strlen(&Commands[3])+1);
+		rt_kprintf("%s<OK>\n",Commands);
+		return REPLY_OK;
+	}
+
+	if(strncmp("fsn[",	Commands,4)==0)	
+	{	
+		uint8_t i;
+		for(i=0;i<64;i++)
+		{
+			if(Commands[i+4]==']' && Commands[i+5]=='\0')
+			{
+				rt_kprintf("%s",Commands);Commands[i+4]='\0';
+				
+				DBG_TRACE("Commands[i+4]=%d\n",Commands[i+4]);
+				break ;
+			}
+		}
+		if(	i>0	&& i<64	&& Commands[i+4]=='\0'&& Commands[i+5]=='\0')			
+		{		
+			at24cxx.write(at24c256, EEPROM_FSN_PAGE_ADDR*EEPROM_PAGE_BYTES, (uint8_t *)(&Commands[4]), strlen(&Commands[4]));
+			
+			DBG_TRACE("strlen(&Commands[4])+1=%d\n",strlen(&Commands[4])+1);
+			
+			rt_kprintf("<OK>\n",Commands);
+		}
+		else rt_kprintf("fsn must be 1~64Byte\n");
+		return REPLY_OK;		
+	}	
+	else return REPLY_INVALID_CMD;
+}
+uint8_t  command_rom(char *Commands)
+{
+	if( strncmp(Commands,"rom[",4)==0  ) 
+	{	
+		char *p = NULL;
+		char *s = &Commands[4];	
+		f32 DataSet;		
+		u8 DataNum=0;
+		DataNum=strtol(s, &p, 10);	
+		if(*p==']'&& *(p+1)=='[' && ( DataNum>0 && DataNum < (EEPROM_ROM_PAGE_LEN+1) ))
+		{
+			s=NULL;
+			DataSet=strtof(p+2, &s);			
+			if(*(s)==']'&& *(s+1)=='\0' )			
+			{																	
+				at24cxx.writeF32(at24c256,(EEPROM_ROM_PAGE_ADDR)*64+(DataNum-1)*4,DataSet);
+				rt_kprintf("%s<OK>\n",Commands);
+				
+			}
+			return REPLY_OK; 
+		}
+		
+	}
+	if( strncmp(Commands,"rom[",4)==0  ) 
+	{	
+		char strF32[10]="";
+		char *p = NULL;
+		char *s = &Commands[4];	
+		u16 DataNum=0;	
+		DataNum=strtol(s, &p, 10);	
+		if(*p==']'&& *(p+1)=='\0'	&& (DataNum>0 && DataNum<(EEPROM_ROM_PAGE_LEN+1)))
+		{	
+			sprintf(strF32,"%.3f",at24cxx.readF32(at24c256 , (EEPROM_ROM_PAGE_ADDR)*64+(DataNum-1)*4));
+			rt_kprintf("%s<%s>\n",Commands,strF32);
+			
+		}
+		return REPLY_OK;	
+	}	
+	
+	
+	return REPLY_INVALID_CMD;
+	
+}
+//
+uint8_t  command_infoPage(char *Commands)
+{
+	if( strncmp(Commands,"save info ",10)==0  ) 
+	{	
+		char *p = NULL;
+		char *s = &Commands[10];	
+		u32 PageNum=0;	
+		PageNum=strtol(s, &p, 10);	
+
+		if(	*p==' ' && PageNum>0 && PageNum < EEPROM_INFO_PAGE_LEN+1	)			
+		{		
+			if(!WritePageStringToEEPROM(PageNum, p+1))	rt_kprintf("%s OK\n",Commands);
+			else  rt_kprintf("pageNum must be 1~%d,data length must be 1~%d\n",EEPROM_INFO_PAGE_LEN,EEPROM_PAGE_BYTES);							
+		}
+		return REPLY_OK;		 
+	}
+	if( strncmp(Commands,"read info ",10)==0  ) 
+	{	
+		char *p = NULL;
+		char *s = &Commands[10];	
+		u8 i;
+		u32 PageNum=0;	
+		char read_info[64];
+		PageNum=strtol(s, &p, 10);	
+		
+		if(	*p=='\0' && PageNum>0 && PageNum <EEPROM_INFO_PAGE_LEN+1	)			//前100页用于FSN+ROM 
+		{
+			if(!ReadPageStringFromEEPROM(PageNum,read_info))
+			{
+				rt_kprintf("%s %.64s\n",Commands,read_info);
+			}
+		}
+		else rt_kprintf("pageNum must be 1~%d\n",EEPROM_INFO_PAGE_LEN);
+		return REPLY_OK;		
+	}
+	else return REPLY_INVALID_CMD;
+}
+
+uint8_t Command_analysis_eeprom(char *string)
+{
+	if( !strcmp(string,"eeprom help") )		 				{ printf_cmdList_eeprom();	return REPLY_OK;	}
+	else if(command_fsn(string)==REPLY_OK)				{return REPLY_OK;	}
+	else if(command_rom(string)==REPLY_OK)				{return REPLY_OK;	}
+	else if(command_infoPage(string)==REPLY_OK)		{return REPLY_OK;	}
+
+/*	
+	else if( !strncmp(string,"savedata ",9) ) 
+	{
+		char *p = NULL;
+		char *s = &string[9];	
+		uint32_t PageNum=0;	
+		PageNum=strtol(s, &p, 10);	
+		if( (*p==' ')	&& (!WritePageStringToEEPROM(PageNum,(char *)p+1)))
+		{
+			rt_kprintf("\nsavedata[%d] ok\n",PageNum);
+		}		
+		else 
+		{
+			//result = REPLY_INVALID_VALUE;
+			rt_kprintf("\npageNum must be 1~200,data length must be 1~64\n");
+		}
+	}
+	else if( !strncmp(string,"readdata ",9) ) 
+	{
+		char *p = NULL;
+		char *s = &string[9];	
+		uint32_t PageNum=0;	
+		uint8_t read_info[64];
+		PageNum=strtol(s, &p, 10);	
+		if( (*p=='\0')	&& (!ReadPageStringFromEEPROM(PageNum,(char *)read_info)))
+		{
+			rt_kprintf("\nreaddata[%d]=%.64s\n",PageNum,read_info);
+		}		
+		else 
+		{
+			//result = REPLY_INVALID_VALUE;
+			rt_kprintf("\npageNum must be 1~200\n");
+		}
+	}
+*/
+ return REPLY_INVALID_CMD;
+}
+
+
+
+
+
+
+
+#endif
+
+/*******命令顺序格式二 直接调用MSH护着FINSH****MSH_CMD_EXPORT********FINSH_FUNCTION_EXPORT***********/
+#if 1		
 int savedata(int argc, char **argv)
 {
 	uint8_t result = REPLY_OK;
@@ -135,101 +334,7 @@ int readdata(int argc, char **argv)
 }
 
 //
-uint8_t  command_rom(char *Commands)
-{
-	if( strncmp(Commands,"rom[",4)==0  ) 
-	{	
-		char *p = NULL;
-		char *s = &Commands[4];	
-		u8 DataSet;		
-		u8 DataNum=0;
-		DataNum=strtol(s, &p, 10);	
-		if(*p==']'&& *(p+1)=='[' && ( DataNum>0 && DataNum < (EEPROM_ROM_PAGE_LEN+1) ))
-		{
-			s=NULL;
-			DataSet=strtof(p+2, &s);			
-			if(*(s)==']'&& *(s+1)=='\0' )			
-			{																	
-				at24cxx.writeF32(at24c256,(EEPROM_ROM_PAGE_ADDR)*64+(DataNum-1)*4,DataSet);
-				rt_kprintf("<ok>\n");
-				return REPLY_OK;
-			}
-			else return REPLY_INVALID_VALUE;	 
-		}	
-	}
-	if( strncmp(Commands,"rom[",4)==0  ) 
-	{	
-		char strF32[10]="";
-		char *p = NULL;
-		char *s = &Commands[4];	
-		u16 DataNum=0;	
-		DataNum=strtol(s, &p, 10);	
-		if(*p==']'&& *(p+1)=='\0'	&& (DataNum>0 && DataNum<(EEPROM_ROM_PAGE_LEN+1)))
-		{	
-			sprintf(strF32,"%.3f",at24cxx.readF32(at24c256 , (EEPROM_ROM_PAGE_ADDR)*64+(DataNum-1)*4));
-			rt_kprintf("<%s>\n",strF32);
-			return REPLY_OK;
-		}
-		else return REPLY_INVALID_VALUE;	 
-	}		
-	else return REPLY_INVALID_CMD;
-	
-}
-//
-uint8_t  command_infoPage(char *Commands)
-{
-	if( strncmp(Commands,"save info ",10)==0  ) 
-	{	
-		char *p = NULL;
-		char *s = &Commands[10];	
-		u32 PageNum=0;	
-		PageNum=strtol(s, &p, 10);	
-		if(	*p==' ' && PageNum>0 && PageNum < (EEPROM_INFO_PAGE_LEN+1)	)			
-		{
-			at24cxx.write(at24c256,(PageNum-1+EEPROM_INFO_PAGE_ADDR)*64,(uint8_t *)(p+1),strlen(p+1)+1);
-			rt_kprintf(" ok\n");
 
-			return REPLY_OK;
-		}
-		else return REPLY_INVALID_VALUE;	 
-	}
-	if( strncmp(Commands,"read info ",10)==0  ) 
-	{	
-		char *p = NULL;
-		char *s = &Commands[10];	
-		u8 i;
-		u32 PageNum=0;	
-		u8 read_info[64];
-		PageNum=strtol(s, &p, 10);	
-		
-		if(	*p=='\0' && PageNum>0 && PageNum <EEPROM_INFO_PAGE_LEN+1	)			//前100页用于FSN+ROM 
-		{
-			//at24cxx.read(at24c256 , (PageNum+100)*64, read_info, 64);
-			at24cxx.read(at24c256 , (PageNum-1+EEPROM_INFO_PAGE_ADDR)*64, read_info, 64);
-			for(i=0;i<64;i++)	
-			{
-				if(read_info[i]>127) { read_info[i]='\0';break;}
-			}
-			rt_kprintf(" %.64s\n",read_info);
-
-			return REPLY_OK;
-		}	
-		else return REPLY_INVALID_VALUE;	 
-	}
-	else return REPLY_INVALID_CMD;
-}
-
-void printf_cmdList_eeprom(void)
-{
-	rt_kprintf("\nEEPROM Usage: \n");
-	rt_kprintf("rom[]----------------read roms\n");
-	rt_kprintf("rom[][]--------------write roms\n");
-	rt_kprintf("save info xx yyyyy---write datas\n");
-	rt_kprintf("read info xx---------read datas\n");
-	rt_kprintf("savedata: save data to page 1~200\n");
-	rt_kprintf("readdata: read data from page 1~200\n");
-}
-//
 uint8_t at24cxx_msh1(char *string)
 {
 	uint8_t result = REPLY_OK;
@@ -276,6 +381,7 @@ uint8_t at24cxx_msh1(char *string)
 
 MSH_CMD_EXPORT(savedata, Save data-without spaces to page);
 MSH_CMD_EXPORT(readdata, Read data from page);
+#endif
 //
 uint8_t at24cxx_msh(char *string)
 {

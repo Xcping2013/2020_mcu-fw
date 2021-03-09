@@ -41,7 +41,7 @@
 
 #define RT_USING_DEVICE
 #define RT_USING_CONSOLE
-#define RT_CONSOLEBUF_SIZE 				256//*8
+//#define RT_CONSOLEBUF_SIZE 				512//*8
 #define RT_CONSOLE_DEVICE_NAME 		"uart1"
 #define RT_VER_NUM 								0x40002
 #define ARCH_ARM
@@ -84,7 +84,7 @@
 #define RT_PIPE_BUFSZ							 512//*8
 #define RT_USING_SERIAL
 #define RT_SERIAL_USING_DMA
-#define RT_SERIAL_RB_BUFSZ 				256//*8
+//#define RT_SERIAL_RB_BUFSZ 				256//*8
 #define RT_USING_PIN
 
 /* Using USB */
@@ -164,7 +164,7 @@
 
 #define SOC_STM32F103VB	//MB1616DEV
 /* Onboard Peripheral Drivers */
-//#define FINSH_ECHO_DISABLE_DEFAULT		//不返回输入的命令
+#define FINSH_ECHO_DISABLE_DEFAULT		//不返回输入的命令
 /* On-chip Peripheral Drivers */
 
 #define BSP_USING_GPIO
@@ -178,4 +178,9 @@
 /* Board extended module Drivers */
 
 
+#define SOC_STM32F103VF	//MB1616DEV
+//#define FINSH_ECHO_DISABLE_DEFAULT		//不返回输入的命令
+#define RT_CONSOLEBUF_SIZE 							1*1024
+//#define FINSH_CMD_SIZE 									72*1024
+#define RT_SERIAL_RB_BUFSZ							1*1024
 #endif

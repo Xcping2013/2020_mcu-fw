@@ -25,8 +25,8 @@ typedef struct
 	void      (*sendbyte)	(IIC_GPIO ,uint8_t );
 	uint8_t   (*readbyte)(IIC_GPIO ,uint8_t );
 	
-  uint8_t 	(*writes)(IIC_GPIO, uint8_t , uint8_t , uint16_t , uint8_t *, uint16_t );
-	uint8_t		(*reads)(IIC_GPIO, uint8_t  , uint8_t , uint16_t , uint8_t *, uint16_t );
+  uint8_t 	(*writes)(IIC_GPIO, uint8_t , uint8_t , uint32_t , uint8_t *, uint16_t );
+	uint8_t		(*reads)(IIC_GPIO, uint8_t  , uint8_t , uint32_t , uint8_t *, uint16_t );
 	
 }SoftI2c_DrvTypeDef;
 

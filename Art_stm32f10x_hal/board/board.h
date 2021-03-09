@@ -24,6 +24,9 @@
 //#define STM32_FLASH_SIZE             (512 * 1024)
 //#define STM32_SRAM_SIZE      					64
 
+//#define STM32_FLASH_SIZE             (768 * 1024)
+//#define STM32_SRAM_SIZE      					96
+
 #define STM32_FLASH_START_ADRESS     ((uint32_t)0x08000000)
 
 

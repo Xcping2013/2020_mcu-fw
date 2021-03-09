@@ -16,6 +16,8 @@
 
 #include "bsp_mcp3421.h"
 
+#include "pca95xx.h"	
+
 #include "app_eeprom_24xx.h"
 
 #include "app_tmc429.h"		
@@ -36,12 +38,67 @@
 
 uint8_t LED_PIN=PB_2;
 
+pca95xx_t MB1616DEV6A_pca95xx=
+{
+	{PC_14,PC_15},
+	//0xE8,	//PCA9539
+	0x48,		//PCA9555		¡Ì
+	0,
+	0,
+	0,
+};
+pca95xx_t MB1616DEV6B_pca95xx=
+{
+	{PC_14,PC_15},
+	//0xEC,	//PCA9539	  ¡Ì
+	0x4C,		//PCA9555	
+	0,
+	0,
+	0,
+};
+
+
 at24cxx_t at24c256=
 {
 	{0},
 	{PC_14,PC_15},	
 	0xA2,	
 };
+/****************************************************************************************/
+void MB1616DEV6_pca95xx_init(void)
+{ 
+	if(	pca95xx_init(&MB1616DEV6A_pca95xx)==REPLY_OK)
+	{
+		rt_kprintf("iic device pca95xx found on MB1616DEV6A addr=0x%x\n",MB1616DEV6A_pca95xx.devAddress);		
+	}
+	if(	pca95xx_init(&MB1616DEV6B_pca95xx)==REPLY_OK)
+	{
+		rt_kprintf("iic device pca95xx found on MB1616DEV6B addr=0x%x\n",MB1616DEV6B_pca95xx.devAddress);		
+	}
+#if 0
+	if(	pca95xx_init(MB1616DEV6A_pca95xx)!=REPLY_OK)
+	{
+		MB1616DEV6A_pca95xx.devAddress=0xE8;
+		if(	pca95xx_init(MB1616DEV6A_pca95xx)==REPLY_OK)
+		{
+			rt_kprintf("iic device pca95xx found on MB1616DEV6A addr=0x%x\n",MB1616DEV6A_pca95xx.devAddress);
+		}
+	}
+	else 	rt_kprintf("iic device pca95xx found on MB1616DEV6A addr=0x%x\n",MB1616DEV6A_pca95xx.devAddress);
+
+	if(	pca95xx_init(MB1616DEV6B_pca95xx)!=REPLY_OK)
+	{
+		MB1616DEV6B_pca95xx.devAddress=0xEC;
+		if(	pca95xx_init(MB1616DEV6B_pca95xx)==REPLY_OK)
+		{
+				rt_kprintf("iic device pca95xx found on MB1616DEV6B addr=0x%x\n",MB1616DEV6B_pca95xx.devAddress);
+		}
+	}
+	else 	rt_kprintf("iic device pca95xx found on MB1616DEV6B addr=0x%x\n",MB1616DEV6B_pca95xx.devAddress);
+#endif
+}
+
+
 /****************************************MAIN---LED Blink*******************************************************/
 int main(void)
 {
@@ -58,29 +115,33 @@ int main(void)
     return RT_EOK;
 }
 
-char version_string[]="Ver01";
+char version_string[]="Ver012";
+
+void user_show_version(void)
+{
+	//rt_show_version();
+
+	rt_kprintf("\nFW-RTT-MB1616dDEV6 %s ROM[%dK] RAM[%dK] build at %s %s\n\n", version_string,STM32_FLASH_SIZE/1024, STM32_SRAM_SIZE,  __TIME__, __DATE__);
+
+}
 
 int mb1616dev6_hw_init(void)
 {		
 	//board.c	rcc_set
-	
-	rt_kprintf("\nFW-RTT-MB1616dDEV6 %s ROM[%dK] RAM[%dK] build at %s %s\n\n", version_string,STM32_FLASH_SIZE/1024, STM32_SRAM_SIZE,  __TIME__, __DATE__);
-	
 	//cube_hal_inits();	
+	
+	user_show_version();	
 	
 	delay_ms(10);
 	
 	at24cxx_hw_init();
 	
-	dido_hw_init();
+	MB1616DEV6_pca95xx_init();
 		
-	tmc429_hw_init();
-
-	rt_kprintf("controller init......[ok]\n");
-	rt_kprintf("------------------------------------------------------------------\n");
-	
 	ProjectAppInit();
 	
+	rt_kprintf("------------------------------------------------------------------\n");
+	rt_kprintf("controller init......[ok]\n");		
 	rt_kprintf("\nyou can type help to list commands and all commands should end with \\r\\n\n");
 	rt_kprintf("------------------------------------------------------------------\n>>");
   return 0;

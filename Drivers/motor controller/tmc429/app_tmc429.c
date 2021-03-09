@@ -290,33 +290,38 @@ void Init429(UCHAR Which429 )
 }
 void tmc429_hw_init(void)
 {	
-	TMC429_DefaulSetting();
-
-	pinMode(SPI_DEV0_CSPin,PIN_MODE_OUTPUT);
-	pinSet(SPI_DEV0_CSPin);	
-	pinMode(SPI_DEV1_CSPin,PIN_MODE_OUTPUT);
-	pinSet(SPI_DEV1_CSPin);	
-
-	tmc429_clk_init();
-	
-	bsp_spi_hw_init();
-
-	Init429(SPI_DEV0_TMC429);
-	Init429(SPI_DEV1_TMC429);
-	
-	if((Read429SingleByte(SPI_DEV0_TMC429,IDX_PULSEDIV_RAMPDIV|(0<<5), 2) & 0x0f )== (motorSetting.RampDiv[0]))
+	if(tmc429_inited==0)
 	{
-		rt_kprintf("spi dev0 tmc429 [found]\n");
-	}
-	else DBG_TRACE("spi dev0 tmc429 [no found]\n");
+		tmc429_inited=1;	
 	
-	if((Read429SingleByte(SPI_DEV1_TMC429,IDX_PULSEDIV_RAMPDIV|(0<<5), 2) & 0x0f )== (motorSetting.RampDiv[3]))
-	{
-		rt_kprintf("spi dev1 tmc429 [found]\n");
-	}
-	else DBG_TRACE("spi dev1 tmc429 [no found]\n");
+		TMC429_DefaulSetting();
 
-	MotorSensor_thread_init();
+		pinMode(SPI_DEV0_CSPin,PIN_MODE_OUTPUT);
+		pinSet(SPI_DEV0_CSPin);	
+		pinMode(SPI_DEV1_CSPin,PIN_MODE_OUTPUT);
+		pinSet(SPI_DEV1_CSPin);	
+
+		tmc429_clk_init();
+		
+		bsp_spi_hw_init();
+
+		Init429(SPI_DEV0_TMC429);
+		Init429(SPI_DEV1_TMC429);
+		
+		if((Read429SingleByte(SPI_DEV0_TMC429,IDX_PULSEDIV_RAMPDIV|(0<<5), 2) & 0x0f )== (motorSetting.RampDiv[0]))
+		{
+			rt_kprintf("spi dev0 tmc429 [found]\n");
+		}
+		else DBG_TRACE("spi dev0 tmc429 [no found]\n");
+		
+		if((Read429SingleByte(SPI_DEV1_TMC429,IDX_PULSEDIV_RAMPDIV|(0<<5), 2) & 0x0f )== (motorSetting.RampDiv[3]))
+		{
+			rt_kprintf("spi dev1 tmc429 [found]\n");
+		}
+		else DBG_TRACE("spi dev1 tmc429 [no found]\n");
+
+		MotorSensor_thread_init();
+	}
 }
 #endif
 
@@ -911,15 +916,15 @@ static void	printf_cmdList_motor(void)
 	rt_kprintf("\n");
 #else
 
-	rt_kprintf("\tCommands  Parameter1\tParameter2\t\tEscription\n");
-	rt_kprintf("motor\t rotate  <motor number> <velocity>             ---rotate with specified velocity\n");	
-	rt_kprintf("motot\t move    <motor number> <position>             ---move to position(relative)\n");	
-	rt_kprintf("motor\t moveto  <motor number> <position>             ---move to position(absolute)\n");
-	rt_kprintf("motor\t stop    <motor number>                        ---stop motor movement\n");
-	rt_kprintf("motor\t get     <parameter>    <motor number>         ---get axis parameter\n");
-	rt_kprintf("motor\t set     <parameter>    <motor number> <value> ---set axis parameter\n");
-	rt_kprintf("motor\t gohome  <motor number> <velocity>             ---motor search limit then search the origin sensor\n");        
-	rt_kprintf("motor\t golimit <motor number> <velocity>             ---motor search limit sensor\n");	
+	rt_kprintf("Commands  Parameter1\tParameter2\t\tEscription\n");
+	rt_kprintf("motor rotate  <motor number> <velocity>             ---rotate with specified velocity\n");	
+	rt_kprintf("motot move    <motor number> <position>             ---move to position(relative)\n");	
+	rt_kprintf("motor moveto  <motor number> <position>             ---move to position(absolute)\n");
+	rt_kprintf("motor stop    <motor number>                        ---stop motor movement\n");
+	rt_kprintf("motor get     <parameter>    <motor number>         ---get axis parameter\n");
+	rt_kprintf("motor set     <parameter>    <motor number> <value> ---set axis parameter\n");
+	rt_kprintf("motor gohome  <motor number> <velocity>             ---motor search limit then search the origin sensor\n");        
+	rt_kprintf("motor golimit <motor number> <velocity>             ---motor search limit sensor\n");	
 	rt_kprintf("\nmotor number:0~5\n");
 #endif
 }
@@ -1074,7 +1079,7 @@ static void LimitSensorProcess(uint8_t motor_number)
 				if(motorlimitedCNT[motor_number]++>=500)
 				{
 					motorlimitedCNT[motor_number]=0;
-					TMC429_MotorRotate(motor_number,	(abs(motorHoming.HomeSpeed[motor_number])/4));			//向右转	
+					TMC429_MotorRotate(motor_number,	(abs(motorHoming.HomeSpeed[motor_number])/2));			//向右转	
 				}
 			}
 			else if((SwitchStatus& (0x01<<TMC429_motor*2)) ? 1:0)													//触发右限位
@@ -1083,7 +1088,7 @@ static void LimitSensorProcess(uint8_t motor_number)
 				if(motorlimitedCNT[motor_number]++>=500)
 				{
 					motorlimitedCNT[motor_number]=0;
-					TMC429_MotorRotate(motor_number,-abs(motorHoming.HomeSpeed[motor_number]/4));				//左转
+					TMC429_MotorRotate(motor_number,-abs(motorHoming.HomeSpeed[motor_number]/2));				//左转
 				}
 			}
 		}
@@ -1301,6 +1306,7 @@ void motor_golimit_config(uint8_t motor_number, int home_speed)
 /****************************************FBTMC429_Motor_msh_cmd****************************************************/
 #if 1
 
+uint8_t tmc429_inited=0;
 uint8_t Command_analysis_motor(char *string);
 uint8_t Command_analysis_motor_get(char *string);
 uint8_t Command_analysis_motor_set(char *string);
@@ -1309,14 +1315,9 @@ uint8_t Command_analysis_motor_set(char *string);
 int motor(int argc, char **argv)
 {
 	int result = REPLY_OK;
-	
-	static uint8_t tmc429_inited=0;
-	
-	if(tmc429_inited==0)
-	{
-		tmc429_inited=1;
-		//tmc429_hw_init();		
-	}
+		
+	tmc429_hw_init();		
+
 	CMDGetFromUart.Type=Type_none;
 	/*
 	motor

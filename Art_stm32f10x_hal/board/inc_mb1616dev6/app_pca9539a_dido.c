@@ -33,17 +33,18 @@ pca9539a_t pca9539a_2=
 pca9539a_t pca9539a_3=
 {
 	//{DEV0PA1_PIN,DEV0PA2_PIN},
-	//0xEC,	//PCA9539
-	
+	//0xEC ---PCA9539
+	//0x4C ---PCA9555
 	{PD_6,PD_7},
-	0x4C,	//PCA9555
+	0x4C,	
 	0,
 	0,
 };
 pca9539a_t pca9539a_4=
 {
 	//{DEV0PC0_PIN,DEV0SCK_PIN},
-	//0xEC PCA9539	
+	//0xEC --- PCA9539	
+	//0x4C --- PCA9555		
 	
 	{PD_4,PB_3},	
 	0x4C,	//PCA9555		
@@ -106,17 +107,41 @@ void dido_pca9539a_init(void)
 	}
 	//if(g_tParam.Project_ID==Atlas_QT1)	//IIC 引脚需上拉
 	{
-		if(	pca9539a_init(pca9539a_3)!=REPLY_OK)
+		if(	pca9539a_init(pca9539a_3)!=REPLY_OK)					//默认使用的是FBJFFB1615CN1转接板 DEV0
 		{
 			pca9539a_3.devAddress=0xEC;
+			
+			DBG_TRACE("no found pca9539a_3 addr=0x4C scl=PD6,sda=PD7\n");
+			DBG_TRACE("scan pca9539a_3 addr=0xEC scl=PD6,sda=PD7\n");
 			if(	pca9539a_init(pca9539a_3)==REPLY_OK)
 			{
 				rt_kprintf("iic device pca95xx [found] addr3=%d\n",pca9539a_3.devAddress);
 			}	
-			
+			else 																					 //扫描 INC-FBIO-0808 还是DEV0
+			{
+				pca9539a_3.pins.scl_pin=PD_7;
+				pca9539a_3.pins.sda_pin=PD_6;
+				if(	pca9539a_init(pca9539a_3)!=REPLY_OK)
+				{
+					DBG_TRACE("scan pca9539a_3 addr=0xEC scl=PD7,sda=PD6\n");
+					pca9539a_3.devAddress=0xE8;
+					DBG_TRACE("scan pca9539a_3 addr=0x8 scl=PD7,sda=PD6\n");
+
+					if(	pca9539a_init(pca9539a_3)==REPLY_OK)
+					{						
+						rt_kprintf("iic device pca95xx [found] addr3=%d\n",pca9539a_3.devAddress);					
+					}	
+				}
+				else 
+				{
+					
+					rt_kprintf("iic device pca95xx [found] addr3=%d\n",pca9539a_3.devAddress);
+				}				
+			}		
 		}
 		else 
 		{
+			
 			rt_kprintf("iic device pca95xx [found] addr3=%d\n",pca9539a_3.devAddress);
 		}
 		
@@ -167,7 +192,10 @@ uint8_t inputGet(uint8_t channel)
 	}		
 	if(channel<9) 		  retval=pca9539a_1.in_data & (1 << (channel-1))? 1:0;
 	else if(channel<17) retval=pca9539a_2.in_data & (1 << (channel-9))? 1:0;
-	else if(channel<25) retval=pca9539a_3.in_data & (1 << (24-channel))? 1:0;
+	//else if(channel<25) retval=pca9539a_3.in_data & (1 << (24-channel))? 1:0;//FBJFFB1615CN1
+	
+	else if(channel<25) retval=pca9539a_3.in_data & (1 << (channel-17))? 0:1;//INC-FBIO-0808
+
 	else if(channel<33) retval=pca9539a_4.in_data & (1 << (32-channel))? 1:0;
 	
 	return retval;
@@ -186,9 +214,14 @@ void outputSet(uint8_t channel, uint8_t setval)
 			pca9539a_2.out_data= setval? pca9539a_2.out_data | (1 << (16-channel)) : pca9539a_2.out_data & ((uint8_t) ~(1 << (16-channel)));
 			SoftI2c.writes(pca9539a_2.pins,1,pca9539a_2.devAddress,3,&pca9539a_2.out_data,1);
 		}	
-		else if(channel<25)	
+//		else if(channel<25)		//默认使用的是FBJFFB1615CN1转接板 DEV0
+//		{
+//			pca9539a_3.out_data= setval? pca9539a_3.out_data | (1 << (24-channel)) : pca9539a_3.out_data & ((uint8_t) ~(1 << (24-channel)));
+//			SoftI2c.writes(pca9539a_3.pins,1,pca9539a_3.devAddress,3,&pca9539a_3.out_data,1);
+//		}		
+		else if(channel<25)			//INC-FBIO-0808  IO顺序相反
 		{
-			pca9539a_3.out_data= setval? pca9539a_3.out_data | (1 << (24-channel)) : pca9539a_3.out_data & ((uint8_t) ~(1 << (24-channel)));
+			pca9539a_3.out_data= setval? pca9539a_3.out_data | (1 << (channel-17)) : pca9539a_3.out_data & ((uint8_t) ~(1 << (channel-17)));
 			SoftI2c.writes(pca9539a_3.pins,1,pca9539a_3.devAddress,3,&pca9539a_3.out_data,1);
 		}	
 		else
@@ -208,12 +241,16 @@ int readinputs(void)
 			SoftI2c.reads(pca9539a_3.pins,1,pca9539a_3.devAddress,0, &pca9539a_3.in_data ,1);	
 			SoftI2c.reads(pca9539a_4.pins,1,pca9539a_4.devAddress,0, &pca9539a_4.in_data ,1);	
 		}	
-		rt_kprintf("+ok@input.readpin(0x%08x)\n",(data_invert_order(pca9539a_4.in_data))<<24|(data_invert_order(pca9539a_3.in_data))<<16|(pca9539a_2.in_data)<<8 | pca9539a_1.in_data);
+//		rt_kprintf("+ok@input.readpin(0x%08x)\n",(data_invert_order(pca9539a_4.in_data))<<24|(data_invert_order(pca9539a_3.in_data))<<16|(pca9539a_2.in_data)<<8 | pca9539a_1.in_data);
+		rt_kprintf("+ok@input.readpin(0x%08x)\n",(data_invert_order(pca9539a_4.in_data))<<24|(~pca9539a_3.in_data)<<16|(pca9539a_2.in_data)<<8 | pca9539a_1.in_data);
+
 		return RT_EOK;
 }
 int readoutputs(void)
 {
-	rt_kprintf("+ok@output.readpin(0x%08x)\n",(pca9539a_4.out_data)<<24 | data_invert_order(pca9539a_3.out_data)<<16 | data_invert_order(pca9539a_2.out_data)<<8 | pca9539a_1.out_data);	
+//	rt_kprintf("+ok@output.readpin(0x%08x)\n",(pca9539a_4.out_data)<<24 | data_invert_order(pca9539a_3.out_data)<<16 | data_invert_order(pca9539a_2.out_data)<<8 | pca9539a_1.out_data);	
+	rt_kprintf("+ok@output.readpin(0x%08x)\n",(pca9539a_4.out_data)<<24 | (pca9539a_3.out_data)<<16 | data_invert_order(pca9539a_2.out_data)<<8 | pca9539a_1.out_data);	
+	
 	return RT_EOK;
 }
 int readinput(int argc, char **argv)
@@ -304,8 +341,11 @@ int readoutput(int argc, char **argv)
 				{
 					if(channel<9) 		  retval=pca9539a_1.out_data & (1 << (channel-1))?  1:0;
 					else if(channel<17) retval=pca9539a_2.out_data & (1 << (16-channel))? 1:0;
-					else if(channel<25) retval=pca9539a_3.out_data & (1 << (24-channel))? 1:0;
-					else if(channel<32) retval=pca9539a_4.out_data & (1 << (channel-31))? 1:0;
+//					else if(channel<25) retval=pca9539a_3.out_data & (1 << (24-channel))? 1:0;
+					
+					else if(channel<25) retval=pca9539a_3.out_data & (1 << (channel-17))? 1:0;
+
+					else if(channel<32) retval=pca9539a_4.out_data & (1 << (channel-25))? 1:0;
 					
 					if((argc-i)>1) 
 					{

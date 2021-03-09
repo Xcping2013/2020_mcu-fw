@@ -49,15 +49,27 @@ in this register is cleared (written with a 0), the original polarity of the cor
 
 #include "bsp_mcu_softi2c.h"
 
+#define PCA95xx_REG_INPUT_P0                  0x00
+#define PCA95xx_REG_INPUT_P1                  0x01
+#define PCA95xx_REG_OUTPUT_P0                 0x02
+#define PCA95xx_REG_OUTPUT_P1                 0x03
+#define PCA95xx_REG_POLARITY_P0               0x04
+#define PCA95xx_REG_POLARITY_P1               0x05
+#define PCA95xx_REG_CONFIG_P0                 0x06
+#define PCA95xx_REG_CONFIG_P1                 0x07
+
 typedef struct 
 {
 	IIC_GPIO	pins;
 	uint8_t devAddress;
 	uint8_t in_data;	
+	uint8_t invertFlag;
 	uint8_t out_data;	
 	
 }pca9539a_t;
 
 uint8_t pca9539a_init(pca9539a_t dev);
+
+extern uint8_t pca95xx_devAddR[4];
 
 #endif

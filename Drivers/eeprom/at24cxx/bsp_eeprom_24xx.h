@@ -15,10 +15,12 @@
 #define AT24C256	0x100		//	32767  
 #define AT24C512	0x200		//
 
+#define AT24CM01	0x400//	131072					//512*256Byte				1MHZ			5ms Max/100W 								1010A2A1P0W/R 
+
 typedef struct 
 {
 	uint16_t type;
-	int maxAddress;
+	uint32_t maxAddress;//int maxAddress;
 	int pageSize;
 	int blockNumbers;
 	uint8_t addrBytes;
@@ -36,6 +38,8 @@ extern const device_t C24LC128 ;
 extern const device_t C24LC256 ;
 extern const device_t C24LC512 ;
 
+extern const device_t C24LCM01 ;
+
 typedef struct 
 {
 	u8 data[8];
@@ -49,8 +53,8 @@ typedef struct
 {		
   void (*init)		(at24cxx_t);
 	u8	 (*check)   (at24cxx_t);
-	void (*read)		(at24cxx_t,  u16 , u8 *,	u16 );		
-	void (*write)		(at24cxx_t,  u16 , u8 *,	u16 );	
+	void (*read)		(at24cxx_t,  u32 , u8 *,	u16 );		
+	void (*write)		(at24cxx_t,  u32 , u8 *,	u16 );	
 	
 	u8 	 (*readU8)	(at24cxx_t , u16 );
 	void (*writeU8)	(at24cxx_t , u16 , u8 );

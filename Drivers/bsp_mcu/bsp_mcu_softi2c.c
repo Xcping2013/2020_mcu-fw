@@ -11,8 +11,8 @@ void 		SoftI2c_send_ack(IIC_GPIO pin);
 void 		SoftI2c_send_no_ack(IIC_GPIO pin);
 void 		SoftI2c_send_byte(IIC_GPIO pin,uint8_t byte);
 uint8_t SoftI2c_read_byte(IIC_GPIO pin,uint8_t ack);
-uint8_t SoftI2c_reads(IIC_GPIO pin, uint8_t DeviceType , uint8_t slave_address, uint16_t reg_address, uint8_t *data, uint16_t num_to_read);
-uint8_t SoftI2c_writes(IIC_GPIO pin, uint8_t DeviceType, uint8_t slave_address, uint16_t reg_address, uint8_t *data, uint16_t num_to_write);
+uint8_t SoftI2c_reads(IIC_GPIO pin, uint8_t DeviceType , uint8_t slave_address, uint32_t reg_address, uint8_t *data, uint16_t num_to_read);
+uint8_t SoftI2c_writes(IIC_GPIO pin, uint8_t DeviceType, uint8_t slave_address, uint32_t reg_address, uint8_t *data, uint16_t num_to_write);
 
 SoftI2c_DrvTypeDef	SoftI2c=
 {
@@ -186,7 +186,7 @@ uint8_t SoftI2c_read_byte(IIC_GPIO pin,uint8_t ack)
 /*						基本时序						 */
 
 //地址1~2字节设备,多为大容量EEPROM,设备REG比较少,一字节
-uint8_t SoftI2c_writes(IIC_GPIO pin, uint8_t DeviceType, uint8_t slave_address, uint16_t reg_address, uint8_t *data, uint16_t num_to_write)
+uint8_t SoftI2c_writes(IIC_GPIO pin, uint8_t DeviceType, uint8_t slave_address, uint32_t reg_address, uint8_t *data, uint16_t num_to_write)
 {
   SoftI2c_start(pin);  
 	switch(DeviceType)
@@ -215,6 +215,14 @@ uint8_t SoftI2c_writes(IIC_GPIO pin, uint8_t DeviceType, uint8_t slave_address, 
 						SoftI2c_send_byte(pin, reg_address%256);   			 //发送低地址
 						if(SoftI2c_wait_ack(pin)) return 2;
 			break;
+		case 4:	//寄存器地址与器件地址复用,
+					SoftI2c_send_byte(pin, slave_address & 0xFE +((reg_address>>16)<<1));   //发送器件地址0XA0,写数据 
+					if(SoftI2c_wait_ack(pin)) return 1;
+					SoftI2c_send_byte(pin, ((uint16_t)reg_address)>>8);   			 //发送FIRST WORLD地址
+					if(SoftI2c_wait_ack(pin)) return 2;
+					SoftI2c_send_byte(pin, (uint8_t)reg_address);   			 //发送SECORD WORLD地址
+					if(SoftI2c_wait_ack(pin)) return 2;
+			break;
 		default:
 			break;		
 	}
@@ -230,7 +238,8 @@ uint8_t SoftI2c_writes(IIC_GPIO pin, uint8_t DeviceType, uint8_t slave_address, 
 }
 
 
-uint8_t 	SoftI2c_reads(IIC_GPIO pin, uint8_t DeviceType , uint8_t slave_address, uint16_t reg_address, uint8_t *data, uint16_t num_to_read)
+//uint8_t 	SoftI2c_reads(IIC_GPIO pin, uint8_t DeviceType , uint8_t slave_address, uint16_t reg_address, uint8_t *data, uint16_t num_to_read)
+uint8_t 	SoftI2c_reads(IIC_GPIO pin, uint8_t DeviceType , uint8_t slave_address, uint32_t reg_address, uint8_t *data, uint16_t num_to_read)
 {
 	switch(DeviceType)
 	{
@@ -257,6 +266,15 @@ uint8_t 	SoftI2c_reads(IIC_GPIO pin, uint8_t DeviceType , uint8_t slave_address,
 					SoftI2c_send_byte(pin, slave_address & 0xFE +((reg_address/256)<<1));   //发送器件地址0XA0,写数据 
 					if(SoftI2c_wait_ack(pin)) return 1;
 					SoftI2c_send_byte(pin, reg_address%256);   			 //发送低地址
+					if(SoftI2c_wait_ack(pin)) return 2;
+			break;
+		case 4:	//寄存器地址与器件地址复用,
+					SoftI2c_start(pin);
+					SoftI2c_send_byte(pin, slave_address & 0xFE +((reg_address>>16)<<1));   //发送器件地址0XA0,写数据 
+					if(SoftI2c_wait_ack(pin)) return 1;
+					SoftI2c_send_byte(pin, ((uint16_t)reg_address)>>8);   			 //发送FIRST WORLD地址
+					if(SoftI2c_wait_ack(pin)) return 2;
+					SoftI2c_send_byte(pin, (uint8_t)reg_address);   			 //发送SECORD WORLD地址
 					if(SoftI2c_wait_ack(pin)) return 2;
 			break;
 		default:

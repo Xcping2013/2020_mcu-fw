@@ -14,6 +14,10 @@
 /* 10Pages  100~109	ROM<number><data> 进行浮点数的保存功能	10*64/4=160个	 */
 #define EEPROM_ROM_PAGE_ADDR				( 100 )								
 #define EEPROM_ROM_PAGE_LEN					10
+
+#define EEPROM_FSN_PAGE_ADDR				250			
+#define EEPROM_FSN_PAGE_LEN					1
+
 /*	剩下的146页用于其他数据保存	*/
 
 //以下其他参数保存从110页开始
@@ -36,6 +40,8 @@
 
 #define EEPROM_TEST_PAGE_ADDR			 			254	
 
+
+
 其他单字节独立标志信息 统一在255页
 
 #define EEPROM_APP_EN_ADDR 				 			255*64+0
@@ -45,6 +51,7 @@
 */
 extern at24cxx_t at24c256;
 
+extern uint8_t Command_analysis_eeprom(char *string);
 void at24cxx_hw_init(void);
 
 uint8_t at24cxx_msh(char *string);

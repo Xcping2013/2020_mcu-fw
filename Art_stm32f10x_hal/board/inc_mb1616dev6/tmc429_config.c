@@ -143,6 +143,11 @@ void TMC429_DefaulSetting(void)
 		motorHoming.GoHome[i]				=	FALSE;
 		motorHoming.GoLimit[i]			=	FALSE;
 		motorHoming.HomeSpeed[i]		=	2000;
+		
+//		OriginSensorON[i]=HIGH;
+
+		OriginSensorON[i]=LOW;
+		
 	}
 }
 //

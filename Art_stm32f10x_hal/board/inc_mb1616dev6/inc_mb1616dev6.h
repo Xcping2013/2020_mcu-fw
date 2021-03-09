@@ -299,4 +299,7 @@
 //}
 //#endif
 
+
+extern char version_string[10];
+
 #endif

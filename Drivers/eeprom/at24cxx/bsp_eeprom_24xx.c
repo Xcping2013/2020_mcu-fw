@@ -12,12 +12,14 @@ const device_t C24LC128  = {AT24C128,0x3FFF, 0x40, 0x01,	2};
 const device_t C24LC256  = {AT24C256,0x7FFF, 0x40, 0x01,	2};
 const device_t C24LC512  = {AT24C512,0xFFFF, 0x40, 0x01,	2};
 
+const device_t C24LCM01  = {AT24CM01,0x1FFFF, 0x100, 0x01,	2};
+
 //初始化IIC接口
 void AT24CXX_Init(at24cxx_t dev)
 {
 	SoftI2c.pin_init(dev.pins);
 }
-void AT24CXX_Reads(at24cxx_t dev, u16 address,u8 *data,	u16 length)
+void AT24CXX_Reads(at24cxx_t dev, u32 address,u8 *data,	u16 length)
 {
 	if(address+length < (dev.eeprom.maxAddress + 2)	)
 	{
@@ -29,9 +31,13 @@ void AT24CXX_Reads(at24cxx_t dev, u16 address,u8 *data,	u16 length)
 		{
 			SoftI2c.reads(dev.pins, 3, dev.devAddress, address ,data,length);
 		}
-		else 
+		else if (dev.eeprom.type > AT24C32 && dev.eeprom.type < AT24C512)
 		{
 			SoftI2c.reads(dev.pins, 2, dev.devAddress, address ,data,length);
+		}	
+		else 
+		{
+			SoftI2c.reads(dev.pins, 4, dev.devAddress, address ,data,length);
 		}	
 	}
 }
@@ -42,7 +48,7 @@ void AT24CXX_Reads(at24cxx_t dev, u16 address,u8 *data,	u16 length)
   ---3. SizeLeft==46-46=0		
 
  */
-void AT24CXX_Writes(at24cxx_t dev, u16 address,u8 *data,	u16 length)
+void AT24CXX_Writes(at24cxx_t dev, u32 address,u8 *data,	u16 length)
 {	
 //web site link:
 //最后的地址还可以写1字节
@@ -68,10 +74,11 @@ void AT24CXX_Writes(at24cxx_t dev, u16 address,u8 *data,	u16 length)
 			{
 				SoftI2c.writes(dev.pins, 3, dev.devAddress, address,(data+OffsetData),SizeNext);
 			}
-			else 
+			else if (dev.eeprom.type > AT24C32 && dev.eeprom.type < AT24C512)
 			{
 				SoftI2c.writes(dev.pins, 2, dev.devAddress, address,(data+OffsetData),SizeNext);
 			}
+			else SoftI2c.writes(dev.pins, 4, dev.devAddress, address,(data+OffsetData),SizeNext);
 			drv_mdelay(5);
 			SizeLeft-=SizeNext;							//剩下的字节数
 			OffsetData+=SizeNext;						//下次需要写入的DATA位置
